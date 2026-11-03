@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タスク管理（モック）</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="header">
+    <h1 class="app-title">タスク管理</h1>
+    <button id="bulk-delete-btn" class="btn btn-danger" disabled>選択したカードを削除（0件）</button>
+  </header>
+
+  <!-- お知らせ欄（M-06〜M-08 を出す場所） -->
+  <div id="notice" class="notice" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" class="notice-close" aria-label="閉じる">×</button>
+  </div>
+
+  <!-- ボード（リストを横に並べる場所） -->
+  <main id="board" class="board"></main>
+
+  <!-- SC-02 カード編集画面 -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h2 id="modal-title">カードの編集</h2>
+        <button id="modal-close" class="modal-close" aria-label="閉じる">×</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="field-label" for="edit-title">タイトル（必須）</label>
+        <input id="edit-title" type="text" class="input" maxlength="100">
+        <p id="edit-title-error" class="error-text" hidden></p>
+
+        <span class="field-label">優先度</span>
+        <div id="edit-priority" class="priority-picker"></div>
+
+        <label class="field-label" for="edit-due">期限</label>
+        <div class="due-row">
+          <input id="edit-due" type="date" class="input input-date">
+          <button id="edit-due-clear" class="btn">クリア</button>
+        </div>
+
+        <span class="field-label">ラベル</span>
+        <div id="edit-labels" class="label-picker"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="edit-delete" class="btn btn-danger">削除</button>
+        <button id="edit-save" class="btn btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
