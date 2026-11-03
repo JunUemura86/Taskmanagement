@@ -1,0 +1,19 @@
+# PostgreSQL（データベース）を Docker で動かすための設定
+# 起動：docker compose up -d   停止：docker compose down
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: taskmanagement
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+    ports:
+      # 自分のパソコン（127.0.0.1）からだけつながるようにする
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # データを Docker の中に保存する（コンテナを止めても消えない）
+      - db-data:/var/lib/postgresql
+
+volumes:
+  db-data:
