@@ -7,7 +7,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書名 | タスク管理アプリ ER図 |
-| 版 | 1.1 |
+| 版 | 1.2 |
 | 作成日 | 2026-11-03 |
 
 ## 改訂履歴
@@ -16,6 +16,7 @@
 |---|---|---|
 | 1.0 | 2026-11-03 | 要件定義書 v1.1 の「5. データ設計（ER図）」を分割して作成 |
 | 1.1 | 2026-11-03 | カードに「優先度」を追加。並べ替えの選択状態を「DBに保存しないもの」に追加 |
+| 1.2 | 2026-11-03 | データベースを PostgreSQL に変更したため、図の型を PostgreSQL のものに変更。完了用リストの値を 1/0 から true/false に変更 |
 
 ---
 
@@ -43,33 +44,33 @@ erDiagram
     labels |o--o{ cards : "1枚のカードに0個か1個のラベルが付く"
 
     lists {
-        INTEGER id PK "ID"
-        TEXT name "リスト名"
+        BIGINT id PK "ID"
+        VARCHAR name "リスト名"
         INTEGER position "並び順"
-        INTEGER is_done "完了用かどうか"
-        TEXT created_at "作成日時"
-        TEXT updated_at "更新日時"
+        BOOLEAN is_done "完了用かどうか"
+        TIMESTAMPTZ created_at "作成日時"
+        TIMESTAMPTZ updated_at "更新日時"
     }
 
     cards {
-        INTEGER id PK "ID"
-        INTEGER list_id FK "リストID"
-        INTEGER label_id FK "ラベルID"
-        TEXT title "タイトル"
+        BIGINT id PK "ID"
+        BIGINT list_id FK "リストID"
+        BIGINT label_id FK "ラベルID"
+        VARCHAR title "タイトル"
         INTEGER priority "優先度"
-        TEXT due_date "期限"
+        DATE due_date "期限"
         INTEGER position "並び順"
-        TEXT created_at "作成日時"
-        TEXT updated_at "更新日時"
+        TIMESTAMPTZ created_at "作成日時"
+        TIMESTAMPTZ updated_at "更新日時"
     }
 
     labels {
-        INTEGER id PK "ID"
-        TEXT name "色の名前"
-        TEXT color_code "色コード"
+        BIGINT id PK "ID"
+        VARCHAR name "色の名前"
+        VARCHAR color_code "色コード"
         INTEGER position "並び順"
-        TEXT created_at "作成日時"
-        TEXT updated_at "更新日時"
+        TIMESTAMPTZ created_at "作成日時"
+        TIMESTAMPTZ updated_at "更新日時"
     }
 ```
 
@@ -103,7 +104,7 @@ erDiagram
 | 項目 | 方針 | 理由 |
 |---|---|---|
 | ラベル | ラベル表を作り、カードは「ラベルID」を持つ | 表と表のつながりで管理でき、将来ラベルに名前を付けるときも、ラベル表に項目を足すだけで済むため |
-| 完了用リスト | リスト表に「完了用かどうか」の項目を持たせる（完了用なら1、それ以外は0） | シンプルなため |
+| 完了用リスト | リスト表に「完了用かどうか」の項目を持たせる（完了用なら true、それ以外は false） | シンプルなため |
 | 優先度 | カード表に「優先度」の項目を数字で持たせる（高＝1、中＝2、低＝3） | 3つに決まっていて増やす予定がないため、表は分けない。数字にすると、小さい順に並べるだけで優先度順になるため |
 | 削除 | DBからデータを完全に消す（物理削除） | シンプルなため |
 | リストの削除 | リストを削除したときは、中のカードもDBから一緒に消す | カードは必ずどれか1つのリストに入るため |
