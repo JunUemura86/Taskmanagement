@@ -6,9 +6,9 @@
 
 | 役割 | 使う技術 |
 |---|---|
-| 画面（フロントエンド） | HTML + CSS + JavaScript |
-| サーバー（バックエンド） | Node.js（Express） |
-| データベース | SQLite（better-sqlite3） |
+| 画面（フロントエンド） | React（JavaScript）＋ Vite ＋ Tailwind CSS |
+| サーバー（バックエンド） | Java ＋ Spring Boot |
+| データベース | PostgreSQL（Docker で動かす） |
 
 詳しくは [技術スタック](docs/tech-stack.md) を参照してください。
 
@@ -16,11 +16,21 @@
 
 > 開発中です。完成後は次の手順で起動します。
 
-```
-npm start
-```
+1. Docker Desktop を起動する
+2. ターミナルで起動用のスクリプトを実行する（データベースの起動・バックアップ・サーバーの起動をまとめて行います）
 
-起動後、ブラウザで `http://localhost:3000` を開きます。
+   ```
+   ./start.sh
+   ```
+
+3. 別のターミナルで、画面を起動する
+
+   ```
+   cd frontend
+   npm run dev
+   ```
+
+4. ブラウザで `http://localhost:5173` を開く
 
 ## ドキュメント
 
@@ -35,5 +45,5 @@ npm start
 | [ER図](docs/er-diagram.md) | データのまとまりとつながり |
 | [データベース設計書](docs/database-design.md) | テーブル定義 |
 | [非機能要件](docs/non-functional-requirements.md) | 性能・信頼性・セキュリティなど |
-| [技術スタック](docs/tech-stack.md) | システム構成・ライブラリ・動作環境 |
+| [技術スタック](docs/tech-stack.md) | システム構成・フレームワーク・動作環境・起動方法 |
 | [テスト項目](docs/test-checklist.md) | 完成の確認項目（T-01〜T-21） |
