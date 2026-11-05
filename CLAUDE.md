@@ -57,3 +57,24 @@
 
 - **Claude Code のフック**（[.claude/hooks/guard-git.py](.claude/hooks/guard-git.py)）：main 上での commit と push、main 宛ての push、命名ルールに合わないブランチの作成を、実行前に止めます。
 - **GitHub のルールセット**（main ブランチ）：PR を経ない変更、強制 push、ブランチの削除を、GitHub 側で拒否します。
+
+## サーバーの起動とポートのルール（厳守）
+
+動作確認では、Claude Code が画面とサーバーの起動まで行います。そのとき、**必ず次のポートで起動します**。
+
+| 役割 | ポート | 起動のコマンド |
+|---|---|---|
+| 画面（Vite） | 5173 | `npm run dev`（`frontend` フォルダで実行） |
+| サーバー（Spring Boot） | 8080 | `./gradlew bootRun --args='--spring.profiles.active=dev'`（`backend` フォルダで実行） |
+| データベース（PostgreSQL） | 5432 | `docker compose up -d`（ルートで実行） |
+
+- **ポートが使われていたら、そのポートを使っているプロセスを停止してから、決められたポートで起動します。**
+- **別のポートで起動してはいけません**（一時的にでも不可）。サーバーの CORS で許可しているのは 5173 だけで、画面が呼ぶ API の URL も 8080 に決めているため、別のポートでは正しく動きません。
+- 画面（Vite）は `strictPort: true` にしてあるので、5173 が使われていると別の番号には逃げずに止まります。
+- データベースは Docker で動かしているので、5432 が使われていたらプロセスを止めず、ユーザーに相談します。
+
+### 仕組みによる強制
+
+- **Claude Code のフック**（[.claude/hooks/guard-ports.py](.claude/hooks/guard-ports.py)）：画面・サーバーの起動コマンドを実行する前に、次のことを自動で行います。
+  - 5173・8080 以外のポートを指定した起動（例：`npm run dev -- --port 5174`、`--server.port=8081`、`SERVER_PORT=9090`）を止める
+  - 5173・8080 を使っているプロセスがあれば停止する（止めたプロセスの名前と番号を表示する）
