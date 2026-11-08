@@ -1,7 +1,14 @@
+import type { Label, List } from '../types'
 import CardItem from './CardItem'
 
+type ListColumnProps = {
+  list: List
+  /** ラベルの ID から、ラベルを引けるようにしたもの */
+  labelsById: Map<number, Label>
+}
+
 /** リスト1つ。見出し（リスト名・完了用なら ✓）と、中のカードを表示する。 */
-function ListColumn({ list, labelsById }) {
+function ListColumn({ list, labelsById }: ListColumnProps) {
   return (
     <section className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
       <h2 className="flex items-center gap-1.5 px-1 pt-1 pb-2 font-bold">
@@ -15,7 +22,11 @@ function ListColumn({ list, labelsById }) {
       <ul className="flex flex-col gap-2">
         {list.cards.map((card) => (
           <li key={card.id}>
-            <CardItem card={card} label={labelsById.get(card.labelId)} isDoneList={list.isDone} />
+            <CardItem
+              card={card}
+              label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
+              isDoneList={list.isDone}
+            />
           </li>
         ))}
       </ul>
