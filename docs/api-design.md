@@ -15,6 +15,7 @@
 | 版 | 日付 | 内容 |
 |---|---|---|
 | 0.1 | 2026-11-05 | 読み取りの API（ボード・カード・ラベル）を追加 |
+| 0.2 | 2026-11-09 | 共通のルールに CORS（画面からの呼び出しの許可）を追加 |
 
 ---
 
@@ -27,6 +28,7 @@
 | 項目名 | キャメルケース（例：`dueDate`、`colorCode`） |
 | 日付 | `YYYY-MM-DD` の形（例：`2026-11-10`）。ないときは `null` |
 | 並び順 | リスト・カード・ラベルとも、`position` の小さい順に返す |
+| CORS（画面からの呼び出しの許可） | 画面の `http://localhost:5173` と `http://127.0.0.1:5173` からの呼び出しだけを許可する。メソッドは GET・POST・PUT・PATCH・DELETE。ほかの場所からの呼び出しは 403 Forbidden になる（設定：`backend/src/main/java/com/example/taskmanagement/config/WebConfig.java`） |
 
 ## 2. API の一覧
 
