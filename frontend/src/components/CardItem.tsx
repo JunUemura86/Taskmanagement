@@ -1,20 +1,29 @@
-import { formatDueDate, getDueStatus } from '../utils/dueDate'
+import type { Card, Label } from '../types'
+import { type DueStatus, formatDueDate, getDueStatus } from '../utils/dueDate'
 import { getPriority } from '../utils/priority'
 
 // 期限の状態ごとの見た目（機能要件「2.3 期限の色分けのルール」）
-const DUE_STYLES = {
+const DUE_STYLES: Record<DueStatus, string> = {
   overdue: 'font-bold text-[#c9372c]',
   soon: 'rounded-sm bg-[#f8e6a0] px-1 text-[#7f5f01]',
   normal: 'text-[#626f86]',
+}
+
+type CardItemProps = {
+  card: Card
+  /** ラベルなしのときは undefined */
+  label?: Label
+  /** 完了用リストのカードなら true */
+  isDoneList: boolean
 }
 
 /**
  * カード1枚。ラベルの帯・タイトル・優先度のバッジ・期限を表示する。
  * 完了用リストのカードは、期限を色分けしない。
  */
-function CardItem({ card, label, isDoneList }) {
+function CardItem({ card, label, isDoneList }: CardItemProps) {
   const priority = getPriority(card.priority)
-  const dueStatus = card.dueDate && !isDoneList ? getDueStatus(card.dueDate) : 'normal'
+  const dueStatus: DueStatus = card.dueDate && !isDoneList ? getDueStatus(card.dueDate) : 'normal'
 
   return (
     <div className={`relative rounded-md bg-white px-2.5 pb-2 shadow-sm ${label ? 'pt-4' : 'pt-2'}`}>

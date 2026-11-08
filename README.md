@@ -6,7 +6,7 @@
 
 | 役割 | 使う技術 |
 |---|---|
-| 画面（フロントエンド） | React（JavaScript）＋ Vite ＋ Tailwind CSS |
+| 画面（フロントエンド） | React（TypeScript）＋ Vite ＋ Tailwind CSS |
 | サーバー（バックエンド） | Java ＋ Spring Boot |
 | データベース | PostgreSQL（Docker で動かす） |
 
