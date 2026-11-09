@@ -1,7 +1,8 @@
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useState, type KeyboardEvent } from 'react'
 import type { CardUpdate } from '../api'
 import type { Card, Label, Priority } from '../types'
 import { getPriority } from '../utils/priority'
+import ConfirmDialog from './ConfirmDialog'
 
 // M-05：カードのタイトルが空のとき
 const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
@@ -39,6 +40,10 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
   const [error, setError] = useState<string | null>(null)
   // 保存している間は、ボタンを押せなくする（二重に保存しないため）
   const [isSaving, setIsSaving] = useState(false)
+  // 削除の確認メッセージ（M-01）を出しているときは true
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  // 確認メッセージの Esc の設定が毎回作り直されないよう、同じ関数を使い続ける
+  const cancelDelete = useCallback(() => setIsConfirmingDelete(false), [])
 
   // Esc キーで閉じる（日本語入力の変換中の Esc は、変換の取り消しなので無視する）
   useEffect(() => {
@@ -63,9 +68,9 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
     if (!saved) setIsSaving(false)
   }
 
+  /** 確認メッセージで「削除」を押したとき */
   async function remove() {
-    // M-01：ブラウザ標準の確認画面（SC-03）。「キャンセル」なら何もしない
-    if (!window.confirm(`カード「${card.title}」を削除します。よろしいですか？`)) return
+    setIsConfirmingDelete(false)
     setIsSaving(true)
     const deleted = await onDelete()
     // 削除できたときは、この画面が閉じるので何もしない
@@ -205,7 +210,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
         <div className="flex justify-between border-t border-[#dcdfe4] px-4 py-3">
           <button
             type="button"
-            onClick={() => void remove()}
+            onClick={() => setIsConfirmingDelete(true)}
             disabled={isSaving}
             className="rounded-md px-3 py-1.5 text-sm font-bold text-[#ae2e24] hover:bg-[#ffeceb] disabled:opacity-50"
           >
@@ -221,6 +226,16 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
           </button>
         </div>
       </div>
+
+      {isConfirmingDelete && (
+        // M-01：削除の確認メッセージ（SC-03）
+        <ConfirmDialog
+          message={`カード「${card.title}」を削除します。よろしいですか？`}
+          confirmLabel="削除"
+          onConfirm={() => void remove()}
+          onCancel={cancelDelete}
+        />
+      )}
     </div>
   )
 }
