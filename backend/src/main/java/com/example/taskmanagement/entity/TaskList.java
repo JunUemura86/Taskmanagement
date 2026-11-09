@@ -35,6 +35,13 @@ public class TaskList {
 	protected TaskList() {
 	}
 
+	/** 新しいリストを作る。完了用リストにはしない（あとで「…」メニューから指定する）。 */
+	public TaskList(String name, Integer position) {
+		this.name = name;
+		this.position = position;
+		this.done = false;
+	}
+
 	public Long getId() { return id; }
 	public String getName() { return name; }
 	public Integer getPosition() { return position; }

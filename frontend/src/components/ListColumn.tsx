@@ -1,6 +1,9 @@
 import type { Label, List } from '../types'
-import AddCardForm from './AddCardForm'
+import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
+
+// M-05：カードのタイトルが空のとき
+const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
 
 type ListColumnProps = {
   list: List
@@ -33,7 +36,16 @@ function ListColumn({ list, labelsById, onAddCard }: ListColumnProps) {
           </li>
         ))}
       </ul>
-      <AddCardForm onAdd={(title) => onAddCard(list.id, title)} />
+      <div className="mt-2">
+        <AddItemForm
+          buttonLabel="＋カードを追加"
+          inputLabel="カードのタイトル"
+          placeholder="タイトルを入力して Enter"
+          maxLength={100}
+          emptyError={EMPTY_TITLE_ERROR}
+          onAdd={(title) => onAddCard(list.id, title)}
+        />
+      </div>
     </section>
   )
 }

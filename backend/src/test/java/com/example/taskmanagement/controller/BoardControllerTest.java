@@ -13,6 +13,7 @@ import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.LabelResponse;
+import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.service.BoardService;
 import java.time.LocalDate;
 import java.util.List;
@@ -81,6 +82,44 @@ class BoardControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].name").value("赤"))
 				.andExpect(jsonPath("$[0].colorCode").value("#E5484D"));
+	}
+
+	@Test
+	void リストを追加すると201と作ったリストが返る() throws Exception {
+		given(boardService.createList(new ListCreateRequest("確認待ち")))
+				.willReturn(new BoardListResponse(12L, "確認待ち", 3, false, List.of()));
+
+		mockMvc.perform(post("/api/lists")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"確認待ち\"}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id").value(12))
+				.andExpect(jsonPath("$.name").value("確認待ち"))
+				.andExpect(jsonPath("$.position").value(3))
+				.andExpect(jsonPath("$.isDone").value(false))
+				.andExpect(jsonPath("$.cards.length()").value(0));
+	}
+
+	@Test
+	void リスト名が空だと400になる() throws Exception {
+		mockMvc.perform(post("/api/lists")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).createList(any());
+	}
+
+	@Test
+	void リスト名が31文字だと400になる() throws Exception {
+		String name = "あ".repeat(31);
+
+		mockMvc.perform(post("/api/lists")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"" + name + "\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).createList(any());
 	}
 
 	@Test

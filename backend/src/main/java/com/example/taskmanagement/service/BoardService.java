@@ -3,8 +3,10 @@ package com.example.taskmanagement.service;
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
-import com.example.taskmanagement.entity.Card;
 import com.example.taskmanagement.dto.LabelResponse;
+import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.entity.Card;
+import com.example.taskmanagement.entity.TaskList;
 import com.example.taskmanagement.repository.CardRepository;
 import com.example.taskmanagement.repository.LabelRepository;
 import com.example.taskmanagement.repository.TaskListRepository;
@@ -23,6 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly = true)
 public class BoardService {
+
+	/** リストの数の上限（機能要件 2.2）。 */
+	private static final int MAX_LISTS = 10;
 
 	/** 1つのリストに入れられるカードの上限（機能要件 2.2）。 */
 	private static final int MAX_CARDS_PER_LIST = 100;
@@ -55,6 +60,33 @@ public class BoardService {
 		return cardRepository.findById(id)
 				.map(CardResponse::from)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "カードが見つかりません（id=" + id + "）"));
+	}
+
+	/**
+	 * リストを一番右に追加し、DB に保存する。中のカードは空で返す。
+	 * リスト名が空・改行入りなら 400、リストが10個あれば 409 にする。
+	 */
+	@Transactional
+	public BoardListResponse createList(ListCreateRequest request) {
+		// 前後の空白を取り除く（空白だけの入力は「空」として扱う）
+		String name = request.name().strip();
+		if (name.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "リスト名を入力してください。");
+		}
+		if (name.contains("\n") || name.contains("\r")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "リスト名に改行は入れられません。");
+		}
+		if (taskListRepository.count() >= MAX_LISTS) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "リストは最大10個まで作成できます。");
+		}
+
+		// 一番右のリストの次の番号にする（リストがなければ 0）
+		int position = taskListRepository.findTopByOrderByPositionDesc()
+				.map(last -> last.getPosition() + 1)
+				.orElse(0);
+
+		TaskList saved = taskListRepository.save(new TaskList(name, position));
+		return BoardListResponse.from(saved, List.of());
 	}
 
 	/**

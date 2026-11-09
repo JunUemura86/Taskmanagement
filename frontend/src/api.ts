@@ -40,6 +40,11 @@ export function fetchBoard(): Promise<List[]> {
   return getJson<List[]>('/board')
 }
 
+/** A-05：リストを一番右に追加する。作ったリスト（カードは空）が返ってくる。 */
+export function createList(name: string): Promise<List> {
+  return postJson<List>('/lists', { name })
+}
+
 /** A-04：カードをリストの一番下に追加する。作ったカードが返ってくる。 */
 export function createCard(listId: number, title: string): Promise<Card> {
   return postJson<Card>('/cards', { listId, title })

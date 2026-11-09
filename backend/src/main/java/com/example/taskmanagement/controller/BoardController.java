@@ -4,6 +4,7 @@ import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.LabelResponse;
+import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.service.BoardService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -37,6 +38,13 @@ public class BoardController {
 	@GetMapping("/cards/{id}")
 	public CardResponse getCard(@PathVariable Long id) {
 		return boardService.getCard(id);
+	}
+
+	/** POST /api/lists：リストを一番右に追加し、作ったリスト（カードは空）を返す（201 Created）。 */
+	@PostMapping("/lists")
+	@ResponseStatus(HttpStatus.CREATED)
+	public BoardListResponse createList(@Valid @RequestBody ListCreateRequest request) {
+		return boardService.createList(request);
 	}
 
 	/** POST /api/cards：カードをリストの一番下に追加し、作ったカードを返す（201 Created）。 */
