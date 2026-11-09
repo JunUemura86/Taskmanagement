@@ -25,6 +25,11 @@ export function moveCardInLists(lists: List[], cardId: number, toListId: number,
   })
 }
 
+/** カードが入っているリストを探す。見つからないときは undefined */
+export function findListOfCard(lists: List[], cardId: number): List | undefined {
+  return lists.find((list) => list.cards.some((card) => card.id === cardId))
+}
+
 /** カードの並び順を、上から 0, 1, 2… に振り直す（変わらないカードは、そのまま使う）。 */
 function renumber(cards: Card[]): Card[] {
   return cards.map((card, index) => (card.position === index ? card : { ...card, position: index }))

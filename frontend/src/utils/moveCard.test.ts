@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Card, List } from '../types'
-import { moveCardInLists } from './moveCard'
+import { findListOfCard, moveCardInLists } from './moveCard'
 
 function card(id: number, listId: number, position: number): Card {
   return { id, listId, labelId: null, title: `カード${id}`, priority: 2, dueDate: null, position }
@@ -78,5 +78,15 @@ describe('moveCardInLists', () => {
       [2, 1, 1],
       [3, 1, 2],
     ])
+  })
+})
+
+describe('findListOfCard', () => {
+  it('カードが入っているリストを返す', () => {
+    expect(findListOfCard(board, 5)?.id).toBe(2)
+  })
+
+  it('ないカードなら undefined', () => {
+    expect(findListOfCard(board, 999)).toBeUndefined()
   })
 })

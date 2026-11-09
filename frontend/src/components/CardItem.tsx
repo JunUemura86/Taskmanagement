@@ -1,4 +1,5 @@
-import { useDraggable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Card, Label } from '../types'
 import CardView from './CardView'
 import { cardDndId, type DndData } from './dnd'
@@ -15,16 +16,19 @@ type CardItemProps = {
 
 /**
  * ボードの中のカード1枚。押すと編集画面を開き、押したまま動かすとドラッグできる。
- * ドラッグ中は、元の場所のカードを薄く表示する（マウスについてくるカードは Board の DragOverlay が表示する）。
+ * ほかのカードをドラッグしているときは、入る場所を空けるために、なめらかに上下にずれる（useSortable）。
+ * ドラッグ中のカード自身は、入る予定の場所に薄く表示する（マウスについてくるカードは Board の DragOverlay が表示する）。
  */
 function CardItem({ card, label, isDoneList, onOpen }: CardItemProps) {
-  const data: DndData = { type: 'card', listId: card.listId, cardId: card.id }
-  const { setNodeRef, listeners, isDragging } = useDraggable({ id: cardDndId(card.id), data })
+  const data: DndData = { type: 'card', cardId: card.id }
+  const { setNodeRef, listeners, transform, transition, isDragging } = useSortable({ id: cardDndId(card.id), data })
 
   return (
     // あとでカードの中にチェックボックスを入れるため、<button> ではなく「ボタンとして働く div」にする
     <div
       ref={setNodeRef}
+      // ずれる動き（上下に動かす量と、動くときのなめらかさ）
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       // マウスで押したまま動かすと、ドラッグが始まる
       {...listeners}
       role="button"
