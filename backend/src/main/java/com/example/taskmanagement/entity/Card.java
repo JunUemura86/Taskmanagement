@@ -65,6 +65,16 @@ public class Card {
 		this.updatedAt = OffsetDateTime.now();
 	}
 
+	/** 入っているリストと並び順を変える。どちらも変わらないときは何もしない（更新した時刻も変えない）。 */
+	public void moveTo(Long listId, int position) {
+		if (listId.equals(this.listId) && position == this.position) {
+			return;
+		}
+		this.listId = listId;
+		this.position = position;
+		this.updatedAt = OffsetDateTime.now();
+	}
+
 	public Long getId() { return id; }
 	public Long getListId() { return listId; }
 	public Long getLabelId() { return labelId; }

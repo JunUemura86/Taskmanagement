@@ -7,6 +7,7 @@ import {
   deleteCard,
   fetchBoard,
   fetchLabels,
+  moveCard,
   updateCard,
 } from './api'
 import Board from './components/Board'
@@ -14,11 +15,15 @@ import CardEditDialog from './components/CardEditDialog'
 import ErrorBanner from './components/ErrorBanner'
 import Header from './components/Header'
 import type { Label, List } from './types'
+import { moveCardInLists } from './utils/moveCard'
 
 // M-06：リストが10個あるのに追加しようとしたとき
 const LIST_LIMIT_ERROR = 'リストは最大10個まで作成できます。'
-// M-07：100枚あるリストにカードを追加しようとしたとき
+// M-07：100枚あるリストにカードを追加・移動しようとしたとき
 const CARD_LIMIT_ERROR = '1つのリストに入れられるカードは最大100枚です。'
+// 1つのリストに入れられるカードの上限（機能要件 2.2）
+const MAX_CARDS_PER_LIST = 100
+
 // M-08：サーバーや DB につながらないとき
 const CONNECTION_ERROR = 'サーバーに接続できませんでした。サーバーが起動しているか確認してください。'
 
@@ -91,6 +96,33 @@ function App() {
     }
   }
 
+  /**
+   * カードを、listId のリストの index 番目（動かすカード自身を除いて数える）に動かす（A-08）。
+   * 先に画面を並べ替えてから保存する。保存できなかったら、元の並びに戻す。
+   */
+  async function handleMoveCard(cardId: number, listId: number, index: number) {
+    const before = lists
+    const fromList = before.find((list) => list.cards.some((card) => card.id === cardId))
+    const toList = before.find((list) => list.id === listId)
+    if (!fromList || !toList) return
+
+    // 別のリストに動かすとき、そこにもう100枚あるなら、動かさない
+    if (fromList.id !== toList.id && toList.cards.length >= MAX_CARDS_PER_LIST) {
+      setNotice(CARD_LIMIT_ERROR)
+      return
+    }
+
+    setLists(moveCardInLists(before, cardId, listId, index))
+    try {
+      await moveCard(cardId, listId, index)
+      setNotice(null)
+    } catch (error: unknown) {
+      console.error(error)
+      setLists(before)
+      setNotice(error instanceof ApiError && error.status === 409 ? CARD_LIMIT_ERROR : CONNECTION_ERROR)
+    }
+  }
+
   /** カードを削除する（A-07）。成功したら、ボードからそのカードを消して編集画面を閉じ、true を返す。 */
   async function handleDeleteCard(cardId: number): Promise<boolean> {
     try {
@@ -152,6 +184,7 @@ function App() {
           onAddCard={handleAddCard}
           onAddList={handleAddList}
           onOpenCard={setEditingCardId}
+          onMoveCard={(cardId, listId, index) => void handleMoveCard(cardId, listId, index)}
         />
       )}
       {editingCard && (
