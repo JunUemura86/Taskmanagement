@@ -18,6 +18,8 @@ type CardEditDialogProps = {
   labels: Label[]
   /** 変更を保存する。保存できたら true、できなかったら false を返す */
   onSave: (update: CardUpdate) => Promise<boolean>
+  /** カードを削除する。削除できたら true、できなかったら false を返す */
+  onDelete: () => Promise<boolean>
   /** 保存せずに閉じる */
   onClose: () => void
 }
@@ -25,8 +27,9 @@ type CardEditDialogProps = {
 /**
  * カード編集画面（SC-02）。メイン画面の上に重ねて表示する。
  * タイトル・優先度・期限・ラベルを変えて「保存」する。「×」と Esc は保存せずに閉じる。
+ * 「削除」は、確認メッセージ（M-01）で「OK」を押したときだけ削除する。
  */
-function CardEditDialog({ card, labels, onSave, onClose }: CardEditDialogProps) {
+function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDialogProps) {
   // 入力中の値は、この画面の中だけで持つ（「保存」が成功したときだけボードを変える）
   const [title, setTitle] = useState(card.title)
   const [priority, setPriority] = useState<Priority>(card.priority)
@@ -58,6 +61,15 @@ function CardEditDialog({ card, labels, onSave, onClose }: CardEditDialogProps) 
     const saved = await onSave({ title: trimmed, priority, dueDate: dueDate === '' ? null : dueDate, labelId })
     // 保存できたときは、この画面が閉じるので何もしない
     if (!saved) setIsSaving(false)
+  }
+
+  async function remove() {
+    // M-01：ブラウザ標準の確認画面（SC-03）。「キャンセル」なら何もしない
+    if (!window.confirm(`カード「${card.title}」を削除します。よろしいですか？`)) return
+    setIsSaving(true)
+    const deleted = await onDelete()
+    // 削除できたときは、この画面が閉じるので何もしない
+    if (!deleted) setIsSaving(false)
   }
 
   function handleTitleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -189,7 +201,16 @@ function CardEditDialog({ card, labels, onSave, onClose }: CardEditDialogProps) 
           </fieldset>
         </div>
 
-        <div className="flex justify-end border-t border-[#dcdfe4] px-4 py-3">
+        {/* 左に「削除」、右に「保存」（押し間違えないよう離して置く） */}
+        <div className="flex justify-between border-t border-[#dcdfe4] px-4 py-3">
+          <button
+            type="button"
+            onClick={() => void remove()}
+            disabled={isSaving}
+            className="rounded-md px-3 py-1.5 text-sm font-bold text-[#ae2e24] hover:bg-[#ffeceb] disabled:opacity-50"
+          >
+            削除
+          </button>
           <button
             type="button"
             onClick={() => void save()}
