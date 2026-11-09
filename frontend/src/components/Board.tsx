@@ -6,14 +6,16 @@ import {
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
 import { useState } from 'react'
 import type { Card, Label, List } from '../types'
+import { countCardsAbove, referenceY } from '../utils/dropIndex'
 import AddItemForm from './AddItemForm'
 import CardView from './CardView'
-import { cardFirstCollision, type DndData, type DropTarget } from './dnd'
+import { type DndData, type DropTarget } from './dnd'
 import ListColumn from './ListColumn'
 
 // M-04：リスト名が空のとき
@@ -55,11 +57,6 @@ function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard, onMoveCard
   // 5px 以上動かしたときだけドラッグを始める（ただ押しただけなら、今までどおり編集画面を開く）
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
-  /** カードが、そのリストの上から何番目（動かすカード自身を除く）にあるか。ないときは -1 */
-  function indexWithout(list: List, cardId: number, draggingId: number): number {
-    return list.cards.filter((card) => card.id !== draggingId).findIndex((card) => card.id === cardId)
-  }
-
   function handleDragStart(event: DragStartEvent) {
     const data = event.active.data.current as DndData | undefined
     if (data?.type !== 'card') return
@@ -69,49 +66,55 @@ function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard, onMoveCard
 
   /** マウスを動かすたびに、差し込む場所を決め直す */
   function handleDragMove(event: DragMoveEvent) {
-    const next = findDropTarget(event)
+    const found = findDropTarget(event)
+    // 元の位置のまま（置いても何も変わらない）ときは、線を出さない（ドラッグ中のカードと重なって見えるため）
+    const next = found && !isSamePlace(event, found) ? found : null
     // 変わったときだけ書き換える（画面を何度も描き直さないため）
     setDropTarget((current) =>
       current?.listId === next?.listId && current?.index === next?.index ? current : next,
     )
   }
 
-  function findDropTarget({ active, over, activatorEvent, delta }: DragMoveEvent): DropTarget | null {
+  /**
+   * 差し込む場所を決める。
+   * - どのリストか：マウスの下にあるリスト（リストの外なら null）
+   * - 何番目か：ドラッグ中のカードの端（上へ動かしているときは上の端、下へは下の端）が、
+   *   となりのカードの真ん中を越えたら、そのカードの向こう側にする
+   */
+  function findDropTarget({ active, over, delta }: DragMoveEvent): DropTarget | null {
     const activeData = active.data.current as DndData | undefined
     const overData = over?.data.current as DndData | undefined
-    if (activeData?.type !== 'card' || !over || !overData) return null
-    const draggingId = activeData.cardId
-    const list = lists.find((l) => l.id === overData.listId)
-    if (!list) return null
+    const rect = active.rect.current.translated
+    if (activeData?.type !== 'card' || !overData || !rect) return null
 
-    // リストの何もないところ（カードの下・空のリスト）なら、一番下
-    if (overData.type === 'list') {
-      return { listId: list.id, index: list.cards.filter((card) => card.id !== draggingId).length }
-    }
+    // そのリストのカード（ドラッグ中のカード自身を除く）の、画面の上での真ん中の高さを調べる
+    const listElement = document.querySelector(`[data-list-id="${overData.listId}"]`)
+    if (!listElement) return null
+    const centers = Array.from(listElement.querySelectorAll<HTMLElement>('[data-card-id]'))
+      .filter((element) => Number(element.dataset.cardId) !== activeData.cardId)
+      .map((element) => {
+        const box = element.getBoundingClientRect()
+        return box.top + box.height / 2
+      })
 
-    // ドラッグ中のカード自身の上なら、元の位置（動かさない）
-    if (overData.cardId === draggingId) {
-      return { listId: list.id, index: list.cards.findIndex((card) => card.id === draggingId) }
-    }
+    const y = referenceY(rect.top, rect.top + rect.height, delta.y)
+    return { listId: overData.listId, index: countCardsAbove(centers, y) }
+  }
 
-    // ほかのカードの上なら、そのカードの上半分で「前」、下半分で「後」に差し込む
-    const pointerY = (activatorEvent as PointerEvent).clientY + delta.y
-    const isLowerHalf = pointerY > over.rect.top + over.rect.height / 2
-    const index = indexWithout(list, overData.cardId, draggingId)
-    return { listId: list.id, index: index + (isLowerHalf ? 1 : 0) }
+  /** 差し込む場所が、ドラッグ中のカードの元の位置と同じか（置いても何も変わらないか） */
+  function isSamePlace({ active }: DragMoveEvent, target: DropTarget): boolean {
+    const activeData = active.data.current as DndData | undefined
+    if (activeData?.type !== 'card' || target.listId !== activeData.listId) return false
+    const fromList = lists.find((list) => list.id === activeData.listId)
+    return fromList?.cards.findIndex((card) => card.id === activeData.cardId) === target.index
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const target = findDropTarget(event)
     const card = draggingCard
     resetDrag()
-    // リストの外で離したときは、何もしない（元の位置のまま）
-    if (!target || !card) return
-
-    // 位置が変わらないときも、何もしない
-    const fromList = lists.find((list) => list.id === card.listId)
-    const fromIndex = fromList ? fromList.cards.findIndex((c) => c.id === card.id) : -1
-    if (target.listId === card.listId && target.index === fromIndex) return
+    // リストの外で離したとき・元の位置のままのときは、何もしない
+    if (!target || !card || isSamePlace(event, target)) return
 
     onMoveCard(card.id, target.listId, target.index)
   }
@@ -124,7 +127,8 @@ function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard, onMoveCard
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={cardFirstCollision}
+      // どのリストの上にあるかは、マウスの位置で決める
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}

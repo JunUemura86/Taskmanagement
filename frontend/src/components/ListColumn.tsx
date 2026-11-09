@@ -7,8 +7,18 @@ import { type DndData, listDndId } from './dnd'
 // M-05：カードのタイトルが空のとき
 const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
 
-/** 差し込む位置に出す青い線 */
-const DROP_LINE = 'pointer-events-none absolute inset-x-0 h-0.5 rounded-full bg-[#0c66e4]'
+/**
+ * 差し込む位置に出す青い線。見つけやすいよう、太さ 4px にして、左の端に丸を付ける。
+ * カードのすき間（8px）の真ん中に来るよう、position で上下の位置を指定する。
+ */
+function DropLine({ position }: { position: string }) {
+  return (
+    <div aria-hidden="true" className={`pointer-events-none absolute inset-x-0 z-10 flex items-center ${position}`}>
+      <div className="h-3 w-3 shrink-0 rounded-full border-[3px] border-[#0c66e4] bg-white" />
+      <div className="h-1 flex-1 rounded-full bg-[#0c66e4] shadow-[0_0_0_1px_rgba(255,255,255,0.8)]" />
+    </div>
+  )
+}
 
 type ListColumnProps = {
   list: List
@@ -37,7 +47,7 @@ function ListColumn({ list, labelsById, draggingCardId, dropIndex, onAddCard, on
   const lastOtherId = others.at(-1)?.id
 
   return (
-    <section ref={setNodeRef} className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
+    <section ref={setNodeRef} data-list-id={list.id} className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
       <h2 className="flex items-center gap-1.5 px-1 pt-1 pb-2 font-bold">
         <span className="break-all">{list.name}</span>
         {list.isDone && (
@@ -54,22 +64,23 @@ function ListColumn({ list, labelsById, draggingCardId, dropIndex, onAddCard, on
           // 一番下に差し込むときは、最後のカードの「下」に線を出す
           const lineBelow = card.id === lastOtherId && dropIndex === others.length
           return (
-            <li key={card.id} className="relative">
-              {lineAbove && <div className={`${DROP_LINE} -top-[5px]`} />}
+            // data-card-id：Board が、差し込む位置を決めるときにカードの位置を調べるための目印
+            <li key={card.id} data-card-id={card.id} className="relative">
+              {lineAbove && <DropLine position="-top-[10px]" />}
               <CardItem
                 card={card}
                 label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
                 isDoneList={list.isDone}
                 onOpen={() => onOpenCard(card.id)}
               />
-              {lineBelow && <div className={`${DROP_LINE} -bottom-[5px]`} />}
+              {lineBelow && <DropLine position="-bottom-[10px]" />}
             </li>
           )
         })}
         {/* ほかにカードがないリストに差し込むときは、線だけを出す */}
         {others.length === 0 && dropIndex === 0 && (
-          <li className="relative h-0.5">
-            <div className={DROP_LINE} />
+          <li className="relative h-3">
+            <DropLine position="inset-y-0" />
           </li>
         )}
       </ul>

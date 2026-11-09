@@ -1,4 +1,4 @@
-import { useDraggable, useDroppable } from '@dnd-kit/core'
+import { useDraggable } from '@dnd-kit/core'
 import type { Card, Label } from '../types'
 import CardView from './CardView'
 import { cardDndId, type DndData } from './dnd'
@@ -14,23 +14,17 @@ type CardItemProps = {
 }
 
 /**
- * ボードの中のカード1枚。押すと編集画面を開く。
- * ドラッグして動かせる（useDraggable）。ほかのカードを上に重ねると、差し込む位置の目印にもなる（useDroppable）。
+ * ボードの中のカード1枚。押すと編集画面を開き、押したまま動かすとドラッグできる。
  * ドラッグ中は、元の場所のカードを薄く表示する（マウスについてくるカードは Board の DragOverlay が表示する）。
  */
 function CardItem({ card, label, isDoneList, onOpen }: CardItemProps) {
-  const id = cardDndId(card.id)
   const data: DndData = { type: 'card', listId: card.listId, cardId: card.id }
-  const { setNodeRef: setDragRef, listeners, isDragging } = useDraggable({ id, data })
-  const { setNodeRef: setDropRef } = useDroppable({ id, data })
+  const { setNodeRef, listeners, isDragging } = useDraggable({ id: cardDndId(card.id), data })
 
   return (
     // あとでカードの中にチェックボックスを入れるため、<button> ではなく「ボタンとして働く div」にする
     <div
-      ref={(node) => {
-        setDragRef(node)
-        setDropRef(node)
-      }}
+      ref={setNodeRef}
       // マウスで押したまま動かすと、ドラッグが始まる
       {...listeners}
       role="button"
