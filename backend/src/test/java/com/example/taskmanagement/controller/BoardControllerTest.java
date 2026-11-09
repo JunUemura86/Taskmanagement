@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
+import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
@@ -181,6 +183,46 @@ class BoardControllerTest {
 		mockMvc.perform(put("/api/cards/999")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"資料作成\",\"priority\":2,\"dueDate\":null,\"labelId\":null}"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void カードを動かすと204が返る() throws Exception {
+		mockMvc.perform(patch("/api/cards/1/position")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":2,\"index\":0}"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).moveCard(1L, new CardMoveRequest(2L, 0));
+	}
+
+	@Test
+	void 動かす先のリストIDがないと400になる() throws Exception {
+		mockMvc.perform(patch("/api/cards/1/position")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"index\":0}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).moveCard(any(), any());
+	}
+
+	@Test
+	void 動かす位置がマイナスだと400になる() throws Exception {
+		mockMvc.perform(patch("/api/cards/1/position")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":2,\"index\":-1}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).moveCard(any(), any());
+	}
+
+	@Test
+	void ないカードを動かすと404になる() throws Exception {
+		willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND)).given(boardService).moveCard(any(), any());
+
+		mockMvc.perform(patch("/api/cards/999/position")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":2,\"index\":0}"))
 				.andExpect(status().isNotFound());
 	}
 

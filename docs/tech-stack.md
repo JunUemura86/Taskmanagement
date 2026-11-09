@@ -7,7 +7,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書名 | タスク管理アプリ 技術スタック |
-| 版 | 2.3 |
+| 版 | 2.4 |
 | 作成日 | 2026-11-03 |
 
 ## 改訂履歴
@@ -19,6 +19,7 @@
 | 2.1 | 2026-11-03 | 起動方法を変更：起動用のスクリプト（start.sh）で、DBの起動・バックアップ・サーバーの起動をまとめて行う |
 | 2.2 | 2026-11-03 | 動作環境に、Java と Docker の開発時の版を追記 |
 | 2.3 | 2026-11-09 | フロントエンドの言語を JavaScript から TypeScript に変更 |
+| 2.4 | 2026-11-09 | dnd-kit の版（@dnd-kit/core 6.3.1・@dnd-kit/sortable 10.0.0・@dnd-kit/utilities 3.2.2）を追記 |
 
 ---
 
@@ -55,7 +56,7 @@
 | 開発の道具 | Vite | React の開発用サーバーを動かし、完成版のファイルを作る |
 | 開発の道具 | TypeScript | 型のチェックをする（`npm run typecheck`）。ブラウザ用のファイルへの変換は Vite が行う |
 | 部品 | @tailwindcss/vite | Vite と Tailwind CSS をつなぐ |
-| 部品 | dnd-kit | リストやカードのドラッグ＆ドロップを作る |
+| 部品 | dnd-kit（@dnd-kit/core 6.3.1・@dnd-kit/sortable 10.0.0・@dnd-kit/utilities 3.2.2） | リストやカードのドラッグ＆ドロップを作る。core が土台、sortable がドラッグ中にまわりのカードをずらす並べ替え、utilities がずらす量の計算 |
 | テストの道具 | Vitest | React のプログラムが正しく動くかを確かめる |
 
 **バックエンド**

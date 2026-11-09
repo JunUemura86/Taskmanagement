@@ -2,6 +2,7 @@ package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
+import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
@@ -12,6 +13,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -61,6 +63,13 @@ public class BoardController {
 	@PutMapping("/cards/{id}")
 	public CardResponse updateCard(@PathVariable Long id, @Valid @RequestBody CardUpdateRequest request) {
 		return boardService.updateCard(id, request);
+	}
+
+	/** PATCH /api/cards/{id}/position：カードを別のリスト・別の位置に動かす。返す中身はない（204 No Content）。 */
+	@PatchMapping("/cards/{id}/position")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void moveCard(@PathVariable Long id, @Valid @RequestBody CardMoveRequest request) {
+		boardService.moveCard(id, request);
 	}
 
 	/** DELETE /api/cards/{id}：カードを1枚削除する。返す中身はない（204 No Content）。 */

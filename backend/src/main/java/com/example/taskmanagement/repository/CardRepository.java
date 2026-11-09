@@ -11,6 +11,9 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 	/** すべてのカードを、並び順（上から）で取り出す。 */
 	List<Card> findAllByOrderByPositionAsc();
 
+	/** そのリストのカードを、並び順（上から）で取り出す。 */
+	List<Card> findByListIdOrderByPositionAsc(Long listId);
+
 	/** そのリストにあるカードの枚数を数える。 */
 	long countByListId(Long listId);
 

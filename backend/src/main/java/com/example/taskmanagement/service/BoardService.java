@@ -2,6 +2,7 @@ package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
+import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
@@ -11,6 +12,7 @@ import com.example.taskmanagement.entity.TaskList;
 import com.example.taskmanagement.repository.CardRepository;
 import com.example.taskmanagement.repository.LabelRepository;
 import com.example.taskmanagement.repository.TaskListRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -134,6 +136,52 @@ public class BoardService {
 		// 書き換えるだけで、処理の終わりに JPA が自動で DB に保存する
 		card.update(title, request.priority(), request.dueDate(), labelId);
 		return CardResponse.from(card);
+	}
+
+	/**
+	 * カードを、指定したリストの index 番目（0 から数える）に動かし、DB に保存する（ドラッグ＆ドロップ）。
+	 * 動かす前のリストと動かした先のリストの並び順は、上から 0, 1, 2… と振り直す。
+	 * カード・リストがなければ 404、別のリストへ動かすとき、そこに100枚あれば 409 にする。
+	 */
+	@Transactional
+	public void moveCard(Long id, CardMoveRequest request) {
+		Card card = cardRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "カードが見つかりません（id=" + id + "）"));
+
+		Long fromListId = card.getListId();
+		Long toListId = request.listId();
+		boolean isOtherList = !toListId.equals(fromListId);
+		if (isOtherList) {
+			if (!taskListRepository.existsById(toListId)) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "リストが見つかりません（id=" + toListId + "）");
+			}
+			if (cardRepository.countByListId(toListId) >= MAX_CARDS_PER_LIST) {
+				throw new ResponseStatusException(HttpStatus.CONFLICT, "1つのリストに入れられるカードは最大100枚です。");
+			}
+		}
+
+		// 動かす前のリストから、動かすカードを抜く
+		List<Card> fromCards = new ArrayList<>(cardRepository.findByListIdOrderByPositionAsc(fromListId));
+		fromCards.removeIf(c -> c.getId().equals(id));
+
+		// 動かした先のリストの index 番目に差し込む（大きすぎるときは一番下）
+		List<Card> toCards = isOtherList
+				? new ArrayList<>(cardRepository.findByListIdOrderByPositionAsc(toListId))
+				: fromCards;
+		toCards.add(Math.min(request.index(), toCards.size()), card);
+
+		// 並び順を振り直す（書き換えるだけで、処理の終わりに JPA が自動で DB に保存する）
+		renumber(toCards, toListId);
+		if (isOtherList) {
+			renumber(fromCards, fromListId);
+		}
+	}
+
+	/** カードの並び順を、上から 0, 1, 2… に振り直す。 */
+	private void renumber(List<Card> cards, Long listId) {
+		for (int i = 0; i < cards.size(); i++) {
+			cards.get(i).moveTo(listId, i);
+		}
 	}
 
 	/** カードを1枚、DB から削除する。カードがなければ 404 にする。 */

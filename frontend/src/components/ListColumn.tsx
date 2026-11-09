@@ -1,6 +1,9 @@
+import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { Label, List } from '../types'
 import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
+import { cardDndId, type DndData, listDndId } from './dnd'
 
 // M-05：カードのタイトルが空のとき
 const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
@@ -15,10 +18,17 @@ type ListColumnProps = {
   onOpenCard: (cardId: number) => void
 }
 
-/** リスト1つ。見出し（リスト名・完了用なら ✓）と、中のカードと、「＋カードを追加」を表示する。 */
+/**
+ * リスト1つ。見出し（リスト名・完了用なら ✓）と、中のカードと、「＋カードを追加」を表示する。
+ * 中のカードは、ドラッグ＆ドロップで並べ替えられる（SortableContext）。
+ * リスト全体も、カードを置ける場所になる（カードのないリストや、カードの下の何もないところに置けるようにするため）。
+ */
 function ListColumn({ list, labelsById, onAddCard, onOpenCard }: ListColumnProps) {
+  const data: DndData = { type: 'list', listId: list.id }
+  const { setNodeRef } = useDroppable({ id: listDndId(list.id), data })
+
   return (
-    <section className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
+    <section ref={setNodeRef} className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
       <h2 className="flex items-center gap-1.5 px-1 pt-1 pb-2 font-bold">
         <span className="break-all">{list.name}</span>
         {list.isDone && (
@@ -27,18 +37,21 @@ function ListColumn({ list, labelsById, onAddCard, onOpenCard }: ListColumnProps
           </span>
         )}
       </h2>
-      <ul className="flex flex-col gap-2">
-        {list.cards.map((card) => (
-          <li key={card.id}>
-            <CardItem
-              card={card}
-              label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
-              isDoneList={list.isDone}
-              onOpen={() => onOpenCard(card.id)}
-            />
-          </li>
-        ))}
-      </ul>
+      {/* 縦に並んだカードとして、並べ替えられるようにする */}
+      <SortableContext items={list.cards.map((card) => cardDndId(card.id))} strategy={verticalListSortingStrategy}>
+        <ul className="flex min-h-1 flex-col gap-2">
+          {list.cards.map((card) => (
+            <li key={card.id}>
+              <CardItem
+                card={card}
+                label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
+                isDoneList={list.isDone}
+                onOpen={() => onOpenCard(card.id)}
+              />
+            </li>
+          ))}
+        </ul>
+      </SortableContext>
       <div className="mt-2">
         <AddItemForm
           buttonLabel="＋カードを追加"

@@ -59,13 +59,26 @@ export function updateCard(id: number, update: CardUpdate): Promise<Card> {
   return sendJson<Card>('PUT', `/cards/${id}`, update)
 }
 
-/** A-07：カードを1枚削除する。返ってくる中身はない（204 No Content）。 */
-export async function deleteCard(id: number): Promise<void> {
-  const path = `/cards/${id}`
-  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'DELETE' })
+/** 返ってくる中身がない API（204 No Content）を呼ぶ。 */
+async function sendWithoutResult(method: 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
   if (!response.ok) {
     throw new ApiError(response.status, path)
   }
+}
+
+/** A-07：カードを1枚削除する。 */
+export function deleteCard(id: number): Promise<void> {
+  return sendWithoutResult('DELETE', `/cards/${id}`)
+}
+
+/** A-08：カードを、listId のリストの index 番目（0 から数える。動かすカード自身を除く）に動かす。 */
+export function moveCard(id: number, listId: number, index: number): Promise<void> {
+  return sendWithoutResult('PATCH', `/cards/${id}/position`, { listId, index })
 }
 
 /** A-03：ラベルの一覧を取ってくる。 */
