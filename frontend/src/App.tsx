@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { fetchBoard, fetchLabels } from './api'
+import { ApiError, createCard, fetchBoard, fetchLabels } from './api'
 import Board from './components/Board'
 import ErrorBanner from './components/ErrorBanner'
 import Header from './components/Header'
 import type { Label, List } from './types'
 
+// M-07：100枚あるリストにカードを追加しようとしたとき
+const CARD_LIMIT_ERROR = '1つのリストに入れられるカードは最大100枚です。'
 // M-08：サーバーや DB につながらないとき
 const CONNECTION_ERROR = 'サーバーに接続できませんでした。サーバーが起動しているか確認してください。'
 
@@ -15,6 +17,8 @@ function App() {
   const [status, setStatus] = useState<Status>('loading')
   const [lists, setLists] = useState<List[]>([])
   const [labelsById, setLabelsById] = useState<Map<number, Label>>(new Map())
+  // 操作に失敗したときに、画面上部のお知らせ欄に出すメッセージ（ないときは null）
+  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     // 画面が閉じられたあとに結果が届いても、使わないようにするための印
@@ -39,12 +43,29 @@ function App() {
     }
   }, [])
 
+  /** カードを追加する（A-04）。成功したら、そのリストの一番下に足して true を返す。 */
+  async function handleAddCard(listId: number, title: string): Promise<boolean> {
+    try {
+      const card = await createCard(listId, title)
+      setLists((current) =>
+        current.map((list) => (list.id === listId ? { ...list, cards: [...list.cards, card] } : list)),
+      )
+      setNotice(null)
+      return true
+    } catch (error: unknown) {
+      console.error(error)
+      setNotice(error instanceof ApiError && error.status === 409 ? CARD_LIMIT_ERROR : CONNECTION_ERROR)
+      return false
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#e8eef5] text-[#172b4d]">
       <Header />
       {status === 'error' && <ErrorBanner message={CONNECTION_ERROR} />}
+      {status === 'ready' && notice && <ErrorBanner message={notice} />}
       {status === 'loading' && <p className="p-4 text-sm text-[#626f86]">読み込み中…</p>}
-      {status === 'ready' && <Board lists={lists} labelsById={labelsById} />}
+      {status === 'ready' && <Board lists={lists} labelsById={labelsById} onAddCard={handleAddCard} />}
     </div>
   )
 }
