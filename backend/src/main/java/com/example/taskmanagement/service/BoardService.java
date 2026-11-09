@@ -136,6 +136,15 @@ public class BoardService {
 		return CardResponse.from(card);
 	}
 
+	/** カードを1枚、DB から削除する。カードがなければ 404 にする。 */
+	@Transactional
+	public void deleteCard(Long id) {
+		if (!cardRepository.existsById(id)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "カードが見つかりません（id=" + id + "）");
+		}
+		cardRepository.deleteById(id);
+	}
+
 	/** カードのタイトルの前後の空白を取り除き、空・改行入りなら 400 にする（空白だけの入力は「空」として扱う）。 */
 	private String normalizeTitle(String rawTitle) {
 		String title = rawTitle.strip();

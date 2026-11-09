@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ApiError, type CardUpdate, createCard, createList, fetchBoard, fetchLabels, updateCard } from './api'
+import {
+  ApiError,
+  type CardUpdate,
+  createCard,
+  createList,
+  deleteCard,
+  fetchBoard,
+  fetchLabels,
+  updateCard,
+} from './api'
 import Board from './components/Board'
 import CardEditDialog from './components/CardEditDialog'
 import ErrorBanner from './components/ErrorBanner'
@@ -82,6 +91,26 @@ function App() {
     }
   }
 
+  /** カードを削除する（A-07）。成功したら、ボードからそのカードを消して編集画面を閉じ、true を返す。 */
+  async function handleDeleteCard(cardId: number): Promise<boolean> {
+    try {
+      await deleteCard(cardId)
+    } catch (error: unknown) {
+      // 404（もう消えている）のときは、画面からも消せばよいので、失敗として扱わない
+      if (!(error instanceof ApiError && error.status === 404)) {
+        console.error(error)
+        setNotice(CONNECTION_ERROR)
+        return false
+      }
+    }
+    setLists((current) =>
+      current.map((list) => ({ ...list, cards: list.cards.filter((card) => card.id !== cardId) })),
+    )
+    setNotice(null)
+    setEditingCardId(null)
+    return true
+  }
+
   // 編集画面を、保存せずに閉じる（編集画面の Esc の設定が毎回作り直されないよう、同じ関数を使い続ける）
   const closeEditor = useCallback(() => setEditingCardId(null), [])
 
@@ -132,6 +161,7 @@ function App() {
           card={editingCard}
           labels={[...labelsById.values()]}
           onSave={(update) => handleUpdateCard(editingCard.id, update)}
+          onDelete={() => handleDeleteCard(editingCard.id)}
           onClose={closeEditor}
         />
       )}

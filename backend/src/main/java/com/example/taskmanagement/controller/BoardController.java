@@ -10,6 +10,7 @@ import com.example.taskmanagement.service.BoardService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,6 +61,13 @@ public class BoardController {
 	@PutMapping("/cards/{id}")
 	public CardResponse updateCard(@PathVariable Long id, @Valid @RequestBody CardUpdateRequest request) {
 		return boardService.updateCard(id, request);
+	}
+
+	/** DELETE /api/cards/{id}：カードを1枚削除する。返す中身はない（204 No Content）。 */
+	@DeleteMapping("/cards/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteCard(@PathVariable Long id) {
+		boardService.deleteCard(id);
 	}
 
 	/** GET /api/labels：ラベルの一覧を返す。 */

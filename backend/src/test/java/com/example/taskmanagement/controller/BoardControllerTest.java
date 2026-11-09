@@ -2,8 +2,10 @@ package com.example.taskmanagement.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -179,6 +181,22 @@ class BoardControllerTest {
 		mockMvc.perform(put("/api/cards/999")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"資料作成\",\"priority\":2,\"dueDate\":null,\"labelId\":null}"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void カードを削除すると204が返る() throws Exception {
+		mockMvc.perform(delete("/api/cards/1"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).deleteCard(1L);
+	}
+
+	@Test
+	void ないカードを削除すると404になる() throws Exception {
+		willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND)).given(boardService).deleteCard(999L);
+
+		mockMvc.perform(delete("/api/cards/999"))
 				.andExpect(status().isNotFound());
 	}
 
