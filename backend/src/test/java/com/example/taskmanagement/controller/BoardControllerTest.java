@@ -6,12 +6,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
+import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.service.BoardService;
@@ -120,6 +122,64 @@ class BoardControllerTest {
 				.andExpect(status().isBadRequest());
 
 		verify(boardService, never()).createList(any());
+	}
+
+	@Test
+	void カードを変更すると200と変更したあとのカードが返る() throws Exception {
+		given(boardService.updateCard(1L, new CardUpdateRequest("資料作成", 1, LocalDate.of(2026, 11, 20), 3L)))
+				.willReturn(new CardResponse(1L, 10L, 3L, "資料作成", 1, LocalDate.of(2026, 11, 20), 0));
+
+		mockMvc.perform(put("/api/cards/1")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"資料作成\",\"priority\":1,\"dueDate\":\"2026-11-20\",\"labelId\":3}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.title").value("資料作成"))
+				.andExpect(jsonPath("$.priority").value(1))
+				.andExpect(jsonPath("$.dueDate").value("2026-11-20"))
+				.andExpect(jsonPath("$.labelId").value(3));
+	}
+
+	@Test
+	void 期限とラベルをなしにして変更できる() throws Exception {
+		given(boardService.updateCard(1L, new CardUpdateRequest("資料作成", 2, null, null)))
+				.willReturn(new CardResponse(1L, 10L, null, "資料作成", 2, null, 0));
+
+		mockMvc.perform(put("/api/cards/1")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"資料作成\",\"priority\":2,\"dueDate\":null,\"labelId\":null}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.dueDate").doesNotExist())
+				.andExpect(jsonPath("$.labelId").doesNotExist());
+	}
+
+	@Test
+	void 変更でタイトルが空だと400になる() throws Exception {
+		mockMvc.perform(put("/api/cards/1")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"\",\"priority\":2,\"dueDate\":null,\"labelId\":null}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).updateCard(any(), any());
+	}
+
+	@Test
+	void 変更で優先度が4だと400になる() throws Exception {
+		mockMvc.perform(put("/api/cards/1")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"資料作成\",\"priority\":4,\"dueDate\":null,\"labelId\":null}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).updateCard(any(), any());
+	}
+
+	@Test
+	void ないカードを変更すると404になる() throws Exception {
+		given(boardService.updateCard(any(), any())).willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		mockMvc.perform(put("/api/cards/999")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"資料作成\",\"priority\":2,\"dueDate\":null,\"labelId\":null}"))
+				.andExpect(status().isNotFound());
 	}
 
 	@Test

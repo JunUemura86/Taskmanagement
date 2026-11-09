@@ -3,6 +3,7 @@ package com.example.taskmanagement.service;
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
+import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.entity.Card;
@@ -95,14 +96,7 @@ public class BoardService {
 	 */
 	@Transactional
 	public CardResponse createCard(CardCreateRequest request) {
-		// 前後の空白を取り除く（空白だけの入力は「空」として扱う）
-		String title = request.title().strip();
-		if (title.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "タイトルを入力してください。");
-		}
-		if (title.contains("\n") || title.contains("\r")) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "タイトルに改行は入れられません。");
-		}
+		String title = normalizeTitle(request.title());
 
 		Long listId = request.listId();
 		if (!taskListRepository.existsById(listId)) {
@@ -119,6 +113,39 @@ public class BoardService {
 
 		Card saved = cardRepository.save(new Card(listId, title, position));
 		return CardResponse.from(saved);
+	}
+
+	/**
+	 * カードのタイトル・優先度・期限・ラベルを変更し、DB に保存する。
+	 * タイトルが空・改行入り、ないラベルなら 400、カードがなければ 404 にする。
+	 */
+	@Transactional
+	public CardResponse updateCard(Long id, CardUpdateRequest request) {
+		String title = normalizeTitle(request.title());
+
+		Card card = cardRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "カードが見つかりません（id=" + id + "）"));
+
+		Long labelId = request.labelId();
+		if (labelId != null && !labelRepository.existsById(labelId)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ラベルが見つかりません（id=" + labelId + "）");
+		}
+
+		// 書き換えるだけで、処理の終わりに JPA が自動で DB に保存する
+		card.update(title, request.priority(), request.dueDate(), labelId);
+		return CardResponse.from(card);
+	}
+
+	/** カードのタイトルの前後の空白を取り除き、空・改行入りなら 400 にする（空白だけの入力は「空」として扱う）。 */
+	private String normalizeTitle(String rawTitle) {
+		String title = rawTitle.strip();
+		if (title.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "タイトルを入力してください。");
+		}
+		if (title.contains("\n") || title.contains("\r")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "タイトルに改行は入れられません。");
+		}
+		return title;
 	}
 
 	/** すべてのラベルを、並び順どおりに返す。 */

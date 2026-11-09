@@ -3,6 +3,7 @@ package com.example.taskmanagement.controller;
 import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
+import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.service.BoardService;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -52,6 +54,12 @@ public class BoardController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public CardResponse createCard(@Valid @RequestBody CardCreateRequest request) {
 		return boardService.createCard(request);
+	}
+
+	/** PUT /api/cards/{id}：カードのタイトル・優先度・期限・ラベルを変更し、変更したあとのカードを返す。 */
+	@PutMapping("/cards/{id}")
+	public CardResponse updateCard(@PathVariable Long id, @Valid @RequestBody CardUpdateRequest request) {
+		return boardService.updateCard(id, request);
 	}
 
 	/** GET /api/labels：ラベルの一覧を返す。 */

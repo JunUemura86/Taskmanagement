@@ -11,10 +11,12 @@ type ListColumnProps = {
   labelsById: Map<number, Label>
   /** カードを追加する。追加できたら true を返す */
   onAddCard: (listId: number, title: string) => Promise<boolean>
+  /** カードを押したとき（編集画面を開く） */
+  onOpenCard: (cardId: number) => void
 }
 
 /** リスト1つ。見出し（リスト名・完了用なら ✓）と、中のカードと、「＋カードを追加」を表示する。 */
-function ListColumn({ list, labelsById, onAddCard }: ListColumnProps) {
+function ListColumn({ list, labelsById, onAddCard, onOpenCard }: ListColumnProps) {
   return (
     <section className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
       <h2 className="flex items-center gap-1.5 px-1 pt-1 pb-2 font-bold">
@@ -32,6 +34,7 @@ function ListColumn({ list, labelsById, onAddCard }: ListColumnProps) {
               card={card}
               label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
               isDoneList={list.isDone}
+              onOpen={() => onOpenCard(card.id)}
             />
           </li>
         ))}

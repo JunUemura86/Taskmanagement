@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { ApiError, createCard, createList, fetchBoard, fetchLabels } from './api'
+import { useCallback, useEffect, useState } from 'react'
+import { ApiError, type CardUpdate, createCard, createList, fetchBoard, fetchLabels, updateCard } from './api'
 import Board from './components/Board'
+import CardEditDialog from './components/CardEditDialog'
 import ErrorBanner from './components/ErrorBanner'
 import Header from './components/Header'
 import type { Label, List } from './types'
@@ -21,6 +22,8 @@ function App() {
   const [labelsById, setLabelsById] = useState<Map<number, Label>>(new Map())
   // 操作に失敗したときに、画面上部のお知らせ欄に出すメッセージ（ないときは null）
   const [notice, setNotice] = useState<string | null>(null)
+  // 編集画面で開いているカードの ID（開いていないときは null）
+  const [editingCardId, setEditingCardId] = useState<number | null>(null)
 
   useEffect(() => {
     // 画面が閉じられたあとに結果が届いても、使わないようにするための印
@@ -59,6 +62,33 @@ function App() {
     }
   }
 
+  /** カードを変更する（A-06）。成功したら、ボードのそのカードを入れ替えて編集画面を閉じ、true を返す。 */
+  async function handleUpdateCard(cardId: number, update: CardUpdate): Promise<boolean> {
+    try {
+      const updated = await updateCard(cardId, update)
+      setLists((current) =>
+        current.map((list) => ({
+          ...list,
+          cards: list.cards.map((card) => (card.id === cardId ? updated : card)),
+        })),
+      )
+      setNotice(null)
+      setEditingCardId(null)
+      return true
+    } catch (error: unknown) {
+      console.error(error)
+      setNotice(CONNECTION_ERROR)
+      return false
+    }
+  }
+
+  // 編集画面を、保存せずに閉じる（編集画面の Esc の設定が毎回作り直されないよう、同じ関数を使い続ける）
+  const closeEditor = useCallback(() => setEditingCardId(null), [])
+
+  // 開いているカードを、ボードの中から探す
+  const editingCard =
+    editingCardId === null ? undefined : lists.flatMap((list) => list.cards).find((card) => card.id === editingCardId)
+
   /** カードを追加する（A-04）。成功したら、そのリストの一番下に足して true を返す。 */
   async function handleAddCard(listId: number, title: string): Promise<boolean> {
     try {
@@ -79,10 +109,31 @@ function App() {
     <div className="min-h-screen bg-[#e8eef5] text-[#172b4d]">
       <Header />
       {status === 'error' && <ErrorBanner message={CONNECTION_ERROR} />}
-      {status === 'ready' && notice && <ErrorBanner message={notice} />}
+      {status === 'ready' && notice && (
+        // 編集画面のうしろの暗い幕より手前に出す
+        <div className="relative z-20">
+          <ErrorBanner message={notice} />
+        </div>
+      )}
       {status === 'loading' && <p className="p-4 text-sm text-[#626f86]">読み込み中…</p>}
       {status === 'ready' && (
-        <Board lists={lists} labelsById={labelsById} onAddCard={handleAddCard} onAddList={handleAddList} />
+        <Board
+          lists={lists}
+          labelsById={labelsById}
+          onAddCard={handleAddCard}
+          onAddList={handleAddList}
+          onOpenCard={setEditingCardId}
+        />
+      )}
+      {editingCard && (
+        <CardEditDialog
+          // カードが変わったら、入力中の値を作り直す
+          key={editingCard.id}
+          card={editingCard}
+          labels={[...labelsById.values()]}
+          onSave={(update) => handleUpdateCard(editingCard.id, update)}
+          onClose={closeEditor}
+        />
       )}
     </div>
   )

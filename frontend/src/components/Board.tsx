@@ -13,14 +13,22 @@ type BoardProps = {
   onAddCard: (listId: number, title: string) => Promise<boolean>
   /** リストを追加する。追加できたら true を返す */
   onAddList: (name: string) => Promise<boolean>
+  /** カードを押したとき（編集画面を開く） */
+  onOpenCard: (cardId: number) => void
 }
 
 /** ボード。リストを左から横に並べ、一番右に「＋リストを追加」を置く（多いときは横にスクロールする）。 */
-function Board({ lists, labelsById, onAddCard, onAddList }: BoardProps) {
+function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard }: BoardProps) {
   return (
     <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-3 overflow-x-auto p-4">
       {lists.map((list) => (
-        <ListColumn key={list.id} list={list} labelsById={labelsById} onAddCard={onAddCard} />
+        <ListColumn
+          key={list.id}
+          list={list}
+          labelsById={labelsById}
+          onAddCard={onAddCard}
+          onOpenCard={onOpenCard}
+        />
       ))}
       <div className="w-68 shrink-0 rounded-lg bg-[#f1f2f4]/70 p-2">
         <AddItemForm

@@ -15,18 +15,34 @@ type CardItemProps = {
   label?: Label
   /** 完了用リストのカードなら true */
   isDoneList: boolean
+  /** カードを押したとき（編集画面を開く） */
+  onOpen: () => void
 }
 
 /**
  * カード1枚。ラベルの帯・タイトル・優先度のバッジ・期限を表示する。
- * 完了用リストのカードは、期限を色分けしない。
+ * 完了用リストのカードは、期限を色分けしない。押すと編集画面を開く。
  */
-function CardItem({ card, label, isDoneList }: CardItemProps) {
+function CardItem({ card, label, isDoneList, onOpen }: CardItemProps) {
   const priority = getPriority(card.priority)
   const dueStatus: DueStatus = card.dueDate && !isDoneList ? getDueStatus(card.dueDate) : 'normal'
 
   return (
-    <div className={`relative rounded-md bg-white px-2.5 pb-2 shadow-sm ${label ? 'pt-4' : 'pt-2'}`}>
+    // あとでカードの中にチェックボックスを入れるため、<button> ではなく「ボタンとして働く div」にする
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        // キーボードの Enter・スペースでも開けるようにする
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
+      aria-label={`カード「${card.title}」を編集`}
+      className={`relative cursor-pointer rounded-md bg-white px-2.5 pb-2 shadow-sm outline-none hover:ring-2 hover:ring-[#8590a2]/40 focus-visible:ring-2 focus-visible:ring-[#0c66e4] ${label ? 'pt-4' : 'pt-2'}`}
+    >
       {label && (
         // ラベル（カテゴリ）：カードの上の端の細い帯。マウスを乗せると名前を表示する
         <div

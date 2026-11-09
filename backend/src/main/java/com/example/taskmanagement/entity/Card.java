@@ -56,6 +56,15 @@ public class Card {
 		this.position = position;
 	}
 
+	/** タイトル・優先度・期限・ラベルを書き換える。更新した時刻も今にする。 */
+	public void update(String title, Integer priority, LocalDate dueDate, Long labelId) {
+		this.title = title;
+		this.priority = priority;
+		this.dueDate = dueDate;
+		this.labelId = labelId;
+		this.updatedAt = OffsetDateTime.now();
+	}
+
 	public Long getId() { return id; }
 	public Long getListId() { return listId; }
 	public Long getLabelId() { return labelId; }

@@ -23,9 +23,10 @@ async function getJson<T>(path: string): Promise<T> {
   return (await response.json()) as T
 }
 
-async function postJson<T>(path: string, body: unknown): Promise<T> {
+/** JSON を送って、JSON を受け取る（追加は POST、変更は PUT）。 */
+async function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
@@ -42,12 +43,20 @@ export function fetchBoard(): Promise<List[]> {
 
 /** A-05：リストを一番右に追加する。作ったリスト（カードは空）が返ってくる。 */
 export function createList(name: string): Promise<List> {
-  return postJson<List>('/lists', { name })
+  return sendJson<List>('POST', '/lists', { name })
 }
 
 /** A-04：カードをリストの一番下に追加する。作ったカードが返ってくる。 */
 export function createCard(listId: number, title: string): Promise<Card> {
-  return postJson<Card>('/cards', { listId, title })
+  return sendJson<Card>('POST', '/cards', { listId, title })
+}
+
+/** A-06 で送る内容。期限なし・ラベルなしは null。 */
+export type CardUpdate = Pick<Card, 'title' | 'priority' | 'dueDate' | 'labelId'>
+
+/** A-06：カードのタイトル・優先度・期限・ラベルを変更する。変更したあとのカードが返ってくる。 */
+export function updateCard(id: number, update: CardUpdate): Promise<Card> {
+  return sendJson<Card>('PUT', `/cards/${id}`, update)
 }
 
 /** A-03：ラベルの一覧を取ってくる。 */
