@@ -1,11 +1,16 @@
 package com.example.taskmanagement.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.taskmanagement.dto.BoardListResponse;
+import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.service.BoardService;
@@ -15,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
@@ -75,5 +81,53 @@ class BoardControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].name").value("赤"))
 				.andExpect(jsonPath("$[0].colorCode").value("#E5484D"));
+	}
+
+	@Test
+	void カードを追加すると201と作ったカードが返る() throws Exception {
+		given(boardService.createCard(new CardCreateRequest(10L, "メールを送る")))
+				.willReturn(new CardResponse(7L, 10L, null, "メールを送る", 2, null, 3));
+
+		mockMvc.perform(post("/api/cards")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":10,\"title\":\"メールを送る\"}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id").value(7))
+				.andExpect(jsonPath("$.listId").value(10))
+				.andExpect(jsonPath("$.title").value("メールを送る"))
+				.andExpect(jsonPath("$.priority").value(2))
+				.andExpect(jsonPath("$.position").value(3));
+	}
+
+	@Test
+	void タイトルが空だと400になる() throws Exception {
+		mockMvc.perform(post("/api/cards")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":10,\"title\":\"\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).createCard(any());
+	}
+
+	@Test
+	void タイトルが101文字だと400になる() throws Exception {
+		String title = "あ".repeat(101);
+
+		mockMvc.perform(post("/api/cards")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listId\":10,\"title\":\"" + title + "\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).createCard(any());
+	}
+
+	@Test
+	void リストIDがないと400になる() throws Exception {
+		mockMvc.perform(post("/api/cards")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"メールを送る\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).createCard(any());
 	}
 }

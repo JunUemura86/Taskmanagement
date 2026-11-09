@@ -42,7 +42,18 @@ public class Card {
 	@Column(name = "updated_at", nullable = false, insertable = false)
 	private OffsetDateTime updatedAt;
 
+	/** 優先度の最初の値（2＝中）。 */
+	private static final int DEFAULT_PRIORITY = 2;
+
 	protected Card() {
+	}
+
+	/** 新しいカードを作る。優先度は「中」、期限・ラベルはなし（あとで編集画面で設定する）。 */
+	public Card(Long listId, String title, Integer position) {
+		this.listId = listId;
+		this.title = title;
+		this.priority = DEFAULT_PRIORITY;
+		this.position = position;
 	}
 
 	public Long getId() { return id; }
