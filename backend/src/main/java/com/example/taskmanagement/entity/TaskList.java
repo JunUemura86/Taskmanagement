@@ -42,6 +42,12 @@ public class TaskList {
 		this.done = false;
 	}
 
+	/** リスト名を変える。更新した時刻も今にする。 */
+	public void rename(String name) {
+		this.name = name;
+		this.updatedAt = OffsetDateTime.now();
+	}
+
 	public Long getId() { return id; }
 	public String getName() { return name; }
 	public Integer getPosition() { return position; }

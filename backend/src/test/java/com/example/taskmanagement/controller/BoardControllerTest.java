@@ -20,6 +20,8 @@ import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.dto.ListRenameRequest;
+import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.service.BoardService;
 import java.time.LocalDate;
 import java.util.List;
@@ -126,6 +128,50 @@ class BoardControllerTest {
 				.andExpect(status().isBadRequest());
 
 		verify(boardService, never()).createList(any());
+	}
+
+	@Test
+	void リスト名を変更すると200と変更したあとのリストが返る() throws Exception {
+		given(boardService.renameList(10L, new ListRenameRequest("確認待ち")))
+				.willReturn(new ListResponse(10L, "確認待ち", 0, false));
+
+		mockMvc.perform(patch("/api/lists/10")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"確認待ち\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(10))
+				.andExpect(jsonPath("$.name").value("確認待ち"))
+				.andExpect(jsonPath("$.isDone").value(false));
+	}
+
+	@Test
+	void 変更でリスト名が空だと400になる() throws Exception {
+		mockMvc.perform(patch("/api/lists/10")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).renameList(any(), any());
+	}
+
+	@Test
+	void 変更でリスト名が31文字だと400になる() throws Exception {
+		mockMvc.perform(patch("/api/lists/10")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"" + "あ".repeat(31) + "\"}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).renameList(any(), any());
+	}
+
+	@Test
+	void ないリストの名前を変更すると404になる() throws Exception {
+		given(boardService.renameList(any(), any())).willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		mockMvc.perform(patch("/api/lists/999")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"確認待ち\"}"))
+				.andExpect(status().isNotFound());
 	}
 
 	@Test

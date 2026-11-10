@@ -45,6 +45,8 @@ type BoardProps = {
   onOpenCard: (cardId: number) => void
   /** カードを、listId のリストの index 番目（動かすカード自身を除いて数える）に動かす */
   onMoveCard: (cardId: number, listId: number, index: number) => void
+  /** リスト名を変更する */
+  onRenameList: (listId: number, name: string) => void
 }
 
 /** ドラッグ＆ドロップの部品の情報から、カードの ID を取り出す（カードでなければ null） */
@@ -58,7 +60,7 @@ function cardIdOf(data: unknown): number | null {
  * カードをドラッグ＆ドロップで、別のリストや別の位置へ動かせる。
  * ドラッグ中は、まわりのカードがずれて、カードが入る場所が空く。
  */
-function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard, onMoveCard }: BoardProps) {
+function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard, onMoveCard, onRenameList }: BoardProps) {
   // ドラッグ中のカード（ドラッグしていないときは null）
   const [draggingCard, setDraggingCard] = useState<Card | null>(null)
   // ドラッグ中だけ使う、表示用のボード。別のリストにカードを持っていくと、ここでそのリストへ移す。
@@ -152,7 +154,14 @@ function Board({ lists, labelsById, onAddCard, onAddList, onOpenCard, onMoveCard
     >
       <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-3 overflow-x-auto p-4">
         {shownLists.map((list) => (
-          <ListColumn key={list.id} list={list} labelsById={labelsById} onAddCard={onAddCard} onOpenCard={onOpenCard} />
+          <ListColumn
+            key={list.id}
+            list={list}
+            labelsById={labelsById}
+            onAddCard={onAddCard}
+            onOpenCard={onOpenCard}
+            onRenameList={onRenameList}
+          />
         ))}
         <div className="w-68 shrink-0 rounded-lg bg-[#f1f2f4]/70 p-2">
           <AddItemForm

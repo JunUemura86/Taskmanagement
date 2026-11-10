@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { Label, List } from '../types'
 import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
+import ListNameEditor from './ListNameEditor'
 import { cardDndId, type DndData, listDndId } from './dnd'
 
 // M-05：カードのタイトルが空のとき
@@ -16,6 +17,8 @@ type ListColumnProps = {
   onAddCard: (listId: number, title: string) => Promise<boolean>
   /** カードを押したとき（編集画面を開く） */
   onOpenCard: (cardId: number) => void
+  /** リスト名を変更する */
+  onRenameList: (listId: number, name: string) => void
 }
 
 /**
@@ -23,16 +26,17 @@ type ListColumnProps = {
  * 中のカードは、ドラッグ＆ドロップで並べ替えられる（SortableContext）。
  * リスト全体も、カードを置ける場所になる（カードのないリストや、カードの下の何もないところに置けるようにするため）。
  */
-function ListColumn({ list, labelsById, onAddCard, onOpenCard }: ListColumnProps) {
+function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList }: ListColumnProps) {
   const data: DndData = { type: 'list', listId: list.id }
   const { setNodeRef } = useDroppable({ id: listDndId(list.id), data })
 
   return (
     <section ref={setNodeRef} className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
-      <h2 className="flex items-center gap-1.5 px-1 pt-1 pb-2 font-bold">
-        <span className="break-all">{list.name}</span>
+      <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
+        {/* リスト名：クリックすると変更できる */}
+        <ListNameEditor name={list.name} onRename={(name) => onRenameList(list.id, name)} />
         {list.isDone && (
-          <span className="text-[#1f845a]" title="完了用リスト">
+          <span className="shrink-0 pr-1 text-[#1f845a]" title="完了用リスト">
             ✓
           </span>
         )}

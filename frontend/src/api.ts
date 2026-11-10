@@ -23,8 +23,8 @@ async function getJson<T>(path: string): Promise<T> {
   return (await response.json()) as T
 }
 
-/** JSON を送って、JSON を受け取る（追加は POST、変更は PUT）。 */
-async function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown): Promise<T> {
+/** JSON を送って、JSON を受け取る（追加は POST、変更は PUT・PATCH）。 */
+async function sendJson<T>(method: 'POST' | 'PUT' | 'PATCH', path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -44,6 +44,11 @@ export function fetchBoard(): Promise<List[]> {
 /** A-05：リストを一番右に追加する。作ったリスト（カードは空）が返ってくる。 */
 export function createList(name: string): Promise<List> {
   return sendJson<List>('POST', '/lists', { name })
+}
+
+/** A-09：リスト名を変更する。変更したあとのリスト（カードは含まない）が返ってくる。 */
+export function renameList(id: number, name: string): Promise<Omit<List, 'cards'>> {
+  return sendJson<Omit<List, 'cards'>>('PATCH', `/lists/${id}`, { name })
 }
 
 /** A-04：カードをリストの一番下に追加する。作ったカードが返ってくる。 */

@@ -7,6 +7,8 @@ import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.dto.ListRenameRequest;
+import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.entity.Card;
 import com.example.taskmanagement.entity.TaskList;
 import com.example.taskmanagement.repository.CardRepository;
@@ -71,14 +73,7 @@ public class BoardService {
 	 */
 	@Transactional
 	public BoardListResponse createList(ListCreateRequest request) {
-		// 前後の空白を取り除く（空白だけの入力は「空」として扱う）
-		String name = request.name().strip();
-		if (name.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "リスト名を入力してください。");
-		}
-		if (name.contains("\n") || name.contains("\r")) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "リスト名に改行は入れられません。");
-		}
+		String name = normalizeListName(request.name());
 		if (taskListRepository.count() >= MAX_LISTS) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "リストは最大10個まで作成できます。");
 		}
@@ -90,6 +85,33 @@ public class BoardService {
 
 		TaskList saved = taskListRepository.save(new TaskList(name, position));
 		return BoardListResponse.from(saved, List.of());
+	}
+
+	/**
+	 * リスト名を変更し、DB に保存する。
+	 * リスト名が空・改行入りなら 400、リストがなければ 404 にする。
+	 */
+	@Transactional
+	public ListResponse renameList(Long id, ListRenameRequest request) {
+		String name = normalizeListName(request.name());
+		TaskList list = taskListRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "リストが見つかりません（id=" + id + "）"));
+
+		// 書き換えるだけで、処理の終わりに JPA が自動で DB に保存する
+		list.rename(name);
+		return ListResponse.from(list);
+	}
+
+	/** リスト名の前後の空白を取り除き、空・改行入りなら 400 にする（空白だけの入力は「空」として扱う）。 */
+	private String normalizeListName(String rawName) {
+		String name = rawName.strip();
+		if (name.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "リスト名を入力してください。");
+		}
+		if (name.contains("\n") || name.contains("\r")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "リスト名に改行は入れられません。");
+		}
+		return name;
 	}
 
 	/**
