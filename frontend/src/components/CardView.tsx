@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Card, Label } from '../types'
 import { type DueStatus, formatDueDate, getDueStatus } from '../utils/dueDate'
 import { getPriority } from '../utils/priority'
@@ -15,6 +16,8 @@ type CardViewProps = {
   label?: Label
   /** 完了用リストのカードなら true */
   isDoneList: boolean
+  /** タイトルの左に置くもの（チェックボックス） */
+  leading?: ReactNode
 }
 
 /**
@@ -22,7 +25,7 @@ type CardViewProps = {
  * 完了用リストのカードは、期限を色分けしない。
  * ボードの中のカード（CardItem）と、ドラッグ中にマウスについてくるカードの両方で使う。
  */
-function CardView({ card, label, isDoneList }: CardViewProps) {
+function CardView({ card, label, isDoneList, leading }: CardViewProps) {
   const priority = getPriority(card.priority)
   const dueStatus: DueStatus = card.dueDate && !isDoneList ? getDueStatus(card.dueDate) : 'normal'
 
@@ -38,6 +41,7 @@ function CardView({ card, label, isDoneList }: CardViewProps) {
       )}
 
       <div className="flex items-start gap-1.5">
+        {leading}
         <p className="min-w-0 flex-1 text-sm break-all">{card.title}</p>
         {/* 優先度：タイトルの右の、文字入りのバッジ */}
         <span

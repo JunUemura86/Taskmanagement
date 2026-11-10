@@ -1,6 +1,7 @@
 package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.dto.BoardListResponse;
+import com.example.taskmanagement.dto.CardBulkDeleteRequest;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardResponse;
@@ -225,6 +226,16 @@ public class BoardService {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "カードが見つかりません（id=" + id + "）");
 		}
 		cardRepository.deleteById(id);
+	}
+
+	/**
+	 * 選んだカードを、まとめて DB から削除する。
+	 * もう消えているカードは無視する（ほかの画面で先に消した場合など。消したい状態にはなっているため）。
+	 */
+	@Transactional
+	public void deleteCards(CardBulkDeleteRequest request) {
+		// 1回の命令（SQL）でまとめて削除する
+		cardRepository.deleteAllByIdInBatch(request.cardIds());
 	}
 
 	/** カードのタイトルの前後の空白を取り除き、空・改行入りなら 400 にする（空白だけの入力は「空」として扱う）。 */

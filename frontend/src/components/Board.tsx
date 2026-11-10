@@ -15,6 +15,7 @@ import type { Card, Label, List } from '../types'
 import { findListOfCard, moveCardInLists } from '../utils/moveCard'
 import AddItemForm from './AddItemForm'
 import CardView from './CardView'
+import Checkbox from './Checkbox'
 import { cardFirstCollision, type DndData } from './dnd'
 import ListColumn from './ListColumn'
 
@@ -49,6 +50,12 @@ type BoardProps = {
   onRenameList: (listId: number, name: string) => void
   /** リストと中のカードを削除する */
   onDeleteList: (listId: number) => void
+  /** チェックボックスで選んだカードの ID */
+  selectedCardIds: ReadonlySet<number>
+  /** カードのチェックボックスを押したとき */
+  onToggleCard: (cardId: number) => void
+  /** 「すべて選択」を押したとき */
+  onToggleList: (listId: number) => void
 }
 
 /** ドラッグ＆ドロップの部品の情報から、カードの ID を取り出す（カードでなければ null） */
@@ -71,6 +78,9 @@ function Board({
   onMoveCard,
   onRenameList,
   onDeleteList,
+  selectedCardIds,
+  onToggleCard,
+  onToggleList,
 }: BoardProps) {
   // ドラッグ中のカード（ドラッグしていないときは null）
   const [draggingCard, setDraggingCard] = useState<Card | null>(null)
@@ -173,6 +183,9 @@ function Board({
             onOpenCard={onOpenCard}
             onRenameList={onRenameList}
             onDeleteList={onDeleteList}
+            selectedCardIds={selectedCardIds}
+            onToggleCard={onToggleCard}
+            onToggleList={onToggleList}
           />
         ))}
         <div className="w-68 shrink-0 rounded-lg bg-[#f1f2f4]/70 p-2">
@@ -195,6 +208,8 @@ function Board({
               card={draggingCard}
               label={draggingCard.labelId === null ? undefined : labelsById.get(draggingCard.labelId)}
               isDoneList={lists.find((list) => list.id === draggingCard.listId)?.isDone ?? false}
+              // チェックボックスは、見せるだけ（押せない）
+              leading={<Checkbox checked={selectedCardIds.has(draggingCard.id)} label="選択" />}
             />
           </div>
         )}

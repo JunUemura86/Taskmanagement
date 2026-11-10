@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Card, Label } from '../types'
 import CardView from './CardView'
+import Checkbox from './Checkbox'
 import { cardDndId, type DndData } from './dnd'
 
 type CardItemProps = {
@@ -12,6 +13,10 @@ type CardItemProps = {
   isDoneList: boolean
   /** カードを押したとき（編集画面を開く） */
   onOpen: () => void
+  /** チェックボックスで選んでいるなら true */
+  isSelected: boolean
+  /** チェックボックスを押したとき */
+  onToggleSelect: () => void
 }
 
 /**
@@ -19,7 +24,7 @@ type CardItemProps = {
  * ほかのカードをドラッグしているときは、入る場所を空けるために、なめらかに上下にずれる（useSortable）。
  * ドラッグ中のカード自身は、入る予定の場所に薄く表示する（マウスについてくるカードは Board の DragOverlay が表示する）。
  */
-function CardItem({ card, label, isDoneList, onOpen }: CardItemProps) {
+function CardItem({ card, label, isDoneList, onOpen, isSelected, onToggleSelect }: CardItemProps) {
   const data: DndData = { type: 'card', cardId: card.id }
   const { setNodeRef, listeners, transform, transition, isDragging } = useSortable({ id: cardDndId(card.id), data })
 
@@ -44,7 +49,12 @@ function CardItem({ card, label, isDoneList, onOpen }: CardItemProps) {
       aria-label={`カード「${card.title}」を編集`}
       className={`cursor-pointer touch-none rounded-md outline-none hover:ring-2 hover:ring-[#8590a2]/40 focus-visible:ring-2 focus-visible:ring-[#0c66e4] ${isDragging ? 'opacity-40' : ''}`}
     >
-      <CardView card={card} label={label} isDoneList={isDoneList} />
+      <CardView
+        card={card}
+        label={label}
+        isDoneList={isDoneList}
+        leading={<Checkbox checked={isSelected} label={`カード「${card.title}」を選択`} onToggle={onToggleSelect} />}
+      />
     </div>
   )
 }

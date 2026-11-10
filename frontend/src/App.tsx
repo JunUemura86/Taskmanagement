@@ -5,6 +5,7 @@ import {
   createCard,
   createList,
   deleteCard,
+  deleteCards,
   deleteList,
   fetchBoard,
   fetchLabels,
@@ -14,10 +15,12 @@ import {
 } from './api'
 import Board from './components/Board'
 import CardEditDialog from './components/CardEditDialog'
+import ConfirmDialog from './components/ConfirmDialog'
 import ErrorBanner from './components/ErrorBanner'
 import Header from './components/Header'
 import type { Label, List } from './types'
 import { moveCardInLists } from './utils/moveCard'
+import { removeCards, selectedCardIdsOnBoard, toggleCard, toggleList } from './utils/selection'
 
 // M-06：リストが10個あるのに追加しようとしたとき
 const LIST_LIMIT_ERROR = 'リストは最大10個まで作成できます。'
@@ -40,6 +43,10 @@ function App() {
   const [notice, setNotice] = useState<string | null>(null)
   // 編集画面で開いているカードの ID（開いていないときは null）
   const [editingCardId, setEditingCardId] = useState<number | null>(null)
+  // チェックボックスで選んだカードの ID（F-12）
+  const [selectedCardIds, setSelectedCardIds] = useState<ReadonlySet<number>>(new Set())
+  // まとめて削除の確認メッセージ（M-02）を出しているときは true
+  const [isConfirmingBulkDelete, setIsConfirmingBulkDelete] = useState(false)
 
   useEffect(() => {
     // 画面が閉じられたあとに結果が届いても、使わないようにするための印
@@ -191,6 +198,30 @@ function App() {
     setNotice(null)
   }
 
+  // 選んだカードのうち、今ボードにあるもの（削除などで消えたカードは数えない）
+  const selectedIdsOnBoard = selectedCardIdsOnBoard(lists, selectedCardIds)
+
+  /**
+   * 選んだカードをまとめて削除する（A-11）。成功したら、ボードから消して選択を空にする。
+   * 失敗したときは、選択はそのまま残して M-08 を表示する。
+   */
+  async function handleDeleteSelected() {
+    setIsConfirmingBulkDelete(false)
+    const ids = selectedIdsOnBoard
+    try {
+      await deleteCards(ids)
+      setLists((current) => removeCards(current, new Set(ids)))
+      setSelectedCardIds(new Set())
+      setNotice(null)
+    } catch (error: unknown) {
+      console.error(error)
+      setNotice(CONNECTION_ERROR)
+    }
+  }
+
+  // まとめて削除の確認メッセージを、削除せずに閉じる（チェックは残す。UC-10）
+  const cancelBulkDelete = useCallback(() => setIsConfirmingBulkDelete(false), [])
+
   /** カードを追加する（A-04）。成功したら、そのリストの一番下に足して true を返す。 */
   async function handleAddCard(listId: number, title: string): Promise<boolean> {
     try {
@@ -209,7 +240,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#e8eef5] text-[#172b4d]">
-      <Header />
+      <Header selectedCount={selectedIdsOnBoard.length} onDeleteSelected={() => setIsConfirmingBulkDelete(true)} />
       {status === 'error' && <ErrorBanner message={CONNECTION_ERROR} />}
       {status === 'ready' && notice && (
         // 編集画面のうしろの暗い幕より手前に出す
@@ -228,6 +259,12 @@ function App() {
           onMoveCard={(cardId, listId, index) => void handleMoveCard(cardId, listId, index)}
           onRenameList={(listId, name) => void handleRenameList(listId, name)}
           onDeleteList={(listId) => void handleDeleteList(listId)}
+          selectedCardIds={selectedCardIds}
+          onToggleCard={(cardId) => setSelectedCardIds((current) => toggleCard(current, cardId))}
+          onToggleList={(listId) => {
+            const list = lists.find((l) => l.id === listId)
+            if (list) setSelectedCardIds((current) => toggleList(current, list))
+          }}
         />
       )}
       {editingCard && (
@@ -239,6 +276,15 @@ function App() {
           onSave={(update) => handleUpdateCard(editingCard.id, update)}
           onDelete={() => handleDeleteCard(editingCard.id)}
           onClose={closeEditor}
+        />
+      )}
+      {isConfirmingBulkDelete && (
+        // M-02：選んだカードをまとめて削除するときの確認メッセージ（SC-03）
+        <ConfirmDialog
+          message={`選択した${selectedIdsOnBoard.length}件のカードを削除します。よろしいですか？`}
+          confirmLabel="削除"
+          onConfirm={() => void handleDeleteSelected()}
+          onCancel={cancelBulkDelete}
         />
       )}
     </div>
