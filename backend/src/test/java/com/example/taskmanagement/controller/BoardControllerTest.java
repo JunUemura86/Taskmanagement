@@ -21,6 +21,7 @@ import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.dto.ListDoneRequest;
 import com.example.taskmanagement.dto.ListRenameRequest;
 import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.service.BoardService;
@@ -172,6 +173,36 @@ class BoardControllerTest {
 		mockMvc.perform(patch("/api/lists/999")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"確認待ち\"}"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void 完了用リストを指定すると204が返る() throws Exception {
+		mockMvc.perform(patch("/api/lists/10/done")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"isDone\":true}"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).setListDone(10L, new ListDoneRequest(true));
+	}
+
+	@Test
+	void 完了用リストの指定でisDoneがないと400になる() throws Exception {
+		mockMvc.perform(patch("/api/lists/10/done")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).setListDone(any(), any());
+	}
+
+	@Test
+	void ないリストを完了用にすると404になる() throws Exception {
+		willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND)).given(boardService).setListDone(any(), any());
+
+		mockMvc.perform(patch("/api/lists/999/done")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"isDone\":true}"))
 				.andExpect(status().isNotFound());
 	}
 

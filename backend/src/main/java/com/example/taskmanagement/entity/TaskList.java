@@ -42,6 +42,15 @@ public class TaskList {
 		this.done = false;
 	}
 
+	/** 完了用リストにする（true）・解除する（false）。変わらないときは何もしない（更新した時刻も変えない）。 */
+	public void changeDone(boolean done) {
+		if (this.done == done) {
+			return;
+		}
+		this.done = done;
+		this.updatedAt = OffsetDateTime.now();
+	}
+
 	/** リスト名を変える。更新した時刻も今にする。 */
 	public void rename(String name) {
 		this.name = name;

@@ -50,6 +50,8 @@ type BoardProps = {
   onRenameList: (listId: number, name: string) => void
   /** リストと中のカードを削除する */
   onDeleteList: (listId: number) => void
+  /** 完了用リストを指定（true）・解除（false）する */
+  onSetDone: (listId: number, isDone: boolean) => void
   /** チェックボックスで選んだカードの ID */
   selectedCardIds: ReadonlySet<number>
   /** カードのチェックボックスを押したとき */
@@ -78,6 +80,7 @@ function Board({
   onMoveCard,
   onRenameList,
   onDeleteList,
+  onSetDone,
   selectedCardIds,
   onToggleCard,
   onToggleList,
@@ -183,6 +186,7 @@ function Board({
             onOpenCard={onOpenCard}
             onRenameList={onRenameList}
             onDeleteList={onDeleteList}
+            onSetDone={onSetDone}
             selectedCardIds={selectedCardIds}
             onToggleCard={onToggleCard}
             onToggleList={onToggleList}

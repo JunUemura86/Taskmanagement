@@ -8,6 +8,7 @@ import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.dto.ListDoneRequest;
 import com.example.taskmanagement.dto.ListRenameRequest;
 import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.service.BoardService;
@@ -59,6 +60,13 @@ public class BoardController {
 	@PatchMapping("/lists/{id}")
 	public ListResponse renameList(@PathVariable Long id, @Valid @RequestBody ListRenameRequest request) {
 		return boardService.renameList(id, request);
+	}
+
+	/** PATCH /api/lists/{id}/done：完了用リストを指定・解除する。返す中身はない（204 No Content）。 */
+	@PatchMapping("/lists/{id}/done")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void setListDone(@PathVariable Long id, @Valid @RequestBody ListDoneRequest request) {
+		boardService.setListDone(id, request);
 	}
 
 	/** DELETE /api/lists/{id}：リストと中のカードを削除する。返す中身はない（204 No Content）。 */

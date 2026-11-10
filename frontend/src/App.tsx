@@ -11,6 +11,7 @@ import {
   fetchLabels,
   moveCard,
   renameList,
+  setListDone,
   updateCard,
 } from './api'
 import Board from './components/Board'
@@ -19,6 +20,7 @@ import ConfirmDialog from './components/ConfirmDialog'
 import ErrorBanner from './components/ErrorBanner'
 import Header from './components/Header'
 import type { Label, List } from './types'
+import { setDoneList } from './utils/doneList'
 import { moveCardInLists } from './utils/moveCard'
 import { removeCards, selectedCardIdsOnBoard, toggleCard, toggleList } from './utils/selection'
 
@@ -182,6 +184,23 @@ function App() {
     }
   }
 
+  /**
+   * 完了用リストを指定・解除する（A-12）。先に画面を変えてから保存する。
+   * 保存できなかったら、元に戻して M-08 を表示する。
+   */
+  async function handleSetDone(listId: number, isDone: boolean) {
+    const before = lists
+    setLists(setDoneList(before, listId, isDone))
+    try {
+      await setListDone(listId, isDone)
+      setNotice(null)
+    } catch (error: unknown) {
+      console.error(error)
+      setLists(before)
+      setNotice(CONNECTION_ERROR)
+    }
+  }
+
   /** リストと中のカードを削除する（A-10）。成功したら、ボードからそのリストを消す。 */
   async function handleDeleteList(listId: number) {
     try {
@@ -259,6 +278,7 @@ function App() {
           onMoveCard={(cardId, listId, index) => void handleMoveCard(cardId, listId, index)}
           onRenameList={(listId, name) => void handleRenameList(listId, name)}
           onDeleteList={(listId) => void handleDeleteList(listId)}
+          onSetDone={(listId, isDone) => void handleSetDone(listId, isDone)}
           selectedCardIds={selectedCardIds}
           onToggleCard={(cardId) => setSelectedCardIds((current) => toggleCard(current, cardId))}
           onToggleList={(listId) => {
