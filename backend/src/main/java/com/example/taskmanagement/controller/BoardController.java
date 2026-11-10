@@ -4,6 +4,7 @@ import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardBulkDeleteRequest;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardMoveRequest;
+import com.example.taskmanagement.dto.CardOrderRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
@@ -67,6 +68,13 @@ public class BoardController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void setListDone(@PathVariable Long id, @Valid @RequestBody ListDoneRequest request) {
 		boardService.setListDone(id, request);
+	}
+
+	/** PUT /api/lists/{id}/card-order：リストのカードを、送られてきた ID の順番に並べ替える。返す中身はない（204 No Content）。 */
+	@PutMapping("/lists/{id}/card-order")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void reorderCards(@PathVariable Long id, @Valid @RequestBody CardOrderRequest request) {
+		boardService.reorderCards(id, request);
 	}
 
 	/** DELETE /api/lists/{id}：リストと中のカードを削除する。返す中身はない（204 No Content）。 */

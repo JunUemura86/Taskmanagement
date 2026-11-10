@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useState } from 'react'
 import type { Label, List } from '../types'
 import { listSelectionState } from '../utils/selection'
+import { SORT_OPTIONS, type SortKey } from '../utils/sortCards'
 import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
 import Checkbox from './Checkbox'
@@ -34,6 +35,10 @@ type ListColumnProps = {
   onToggleCard: (cardId: number) => void
   /** 「すべて選択」を押したとき */
   onToggleList: (listId: number) => void
+  /** プルダウンに表示する並べ替えの条件（「並べ替え…」のときは null） */
+  sortKey: SortKey | null
+  /** プルダウンで並べ替えの条件を選んだとき */
+  onSort: (listId: number, key: SortKey) => void
 }
 
 /**
@@ -52,6 +57,8 @@ function ListColumn({
   selectedCardIds,
   onToggleCard,
   onToggleList,
+  sortKey,
+  onSort,
 }: ListColumnProps) {
   const selection = listSelectionState(list, selectedCardIds)
   // 削除の確認メッセージ（M-03）を出しているときは true
@@ -90,6 +97,24 @@ function ListColumn({
           ]}
         />
       </h2>
+      {/* 並べ替えのプルダウン（UC-12）。カードが1枚以下のときは押せない */}
+      <select
+        value={sortKey ?? ''}
+        onChange={(event) => onSort(list.id, event.target.value as SortKey)}
+        disabled={list.cards.length <= 1}
+        aria-label={`リスト「${list.name}」のカードを並べ替える`}
+        className="mb-2 w-full cursor-pointer rounded-md border border-[#dcdfe4] bg-white px-2 py-1 text-sm text-[#44546f] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {/* 最初に表示するだけの項目（選べない） */}
+        <option value="" disabled hidden>
+          並べ替え…
+        </option>
+        {SORT_OPTIONS.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.text}
+          </option>
+        ))}
+      </select>
       {/* 縦に並んだカードとして、並べ替えられるようにする */}
       <SortableContext items={list.cards.map((card) => cardDndId(card.id))} strategy={verticalListSortingStrategy}>
         <ul className="flex min-h-1 flex-col gap-2">

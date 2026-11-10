@@ -17,6 +17,7 @@ import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardBulkDeleteRequest;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardMoveRequest;
+import com.example.taskmanagement.dto.CardOrderRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
@@ -203,6 +204,36 @@ class BoardControllerTest {
 		mockMvc.perform(patch("/api/lists/999/done")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"isDone\":true}"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void カードを並べ替えると204が返る() throws Exception {
+		mockMvc.perform(put("/api/lists/10/card-order")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"cardIds\":[3,1,2]}"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).reorderCards(10L, new CardOrderRequest(List.of(3L, 1L, 2L)));
+	}
+
+	@Test
+	void 並べ替えでcardIdsがないと400になる() throws Exception {
+		mockMvc.perform(put("/api/lists/10/card-order")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).reorderCards(any(), any());
+	}
+
+	@Test
+	void ないリストを並べ替えると404になる() throws Exception {
+		willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND)).given(boardService).reorderCards(any(), any());
+
+		mockMvc.perform(put("/api/lists/999/card-order")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"cardIds\":[1]}"))
 				.andExpect(status().isNotFound());
 	}
 

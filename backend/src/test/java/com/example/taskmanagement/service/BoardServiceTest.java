@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.example.taskmanagement.dto.CardMoveRequest;
+import com.example.taskmanagement.dto.CardOrderRequest;
 import com.example.taskmanagement.dto.ListDoneRequest;
 import com.example.taskmanagement.entity.Card;
 import com.example.taskmanagement.entity.TaskList;
@@ -144,6 +145,52 @@ class BoardServiceTest {
 		// 動かしていない
 		assertThat(a.getListId()).isEqualTo(1L);
 		assertThat(a.getPosition()).isEqualTo(0);
+	}
+
+	@Test
+	void 送られてきた順番にカードが並べ替えられる() {
+		given(taskListRepository.existsById(1L)).willReturn(true);
+		givenList1();
+
+		boardService.reorderCards(1L, new CardOrderRequest(List.of(3L, 1L, 2L)));
+
+		// C(0) A(1) B(2)
+		assertThat(c.getPosition()).isEqualTo(0);
+		assertThat(a.getPosition()).isEqualTo(1);
+		assertThat(b.getPosition()).isEqualTo(2);
+	}
+
+	@Test
+	void 並べ替えでリストのカードと違うIDだと409になる() {
+		given(taskListRepository.existsById(1L)).willReturn(true);
+		givenList1();
+
+		// D はリスト2のカード
+		assertThatThrownBy(() -> boardService.reorderCards(1L, new CardOrderRequest(List.of(3L, 1L, 4L))))
+				.isInstanceOfSatisfying(ResponseStatusException.class,
+						ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+		// 並び順は変わっていない
+		assertThat(a.getPosition()).isEqualTo(0);
+	}
+
+	@Test
+	void 並べ替えでカードが足りないと409になる() {
+		given(taskListRepository.existsById(1L)).willReturn(true);
+		givenList1();
+
+		assertThatThrownBy(() -> boardService.reorderCards(1L, new CardOrderRequest(List.of(3L, 1L))))
+				.isInstanceOfSatisfying(ResponseStatusException.class,
+						ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+	}
+
+	@Test
+	void 並べ替えで同じIDが2回あると409になる() {
+		given(taskListRepository.existsById(1L)).willReturn(true);
+		givenList1();
+
+		assertThatThrownBy(() -> boardService.reorderCards(1L, new CardOrderRequest(List.of(1L, 1L, 2L))))
+				.isInstanceOfSatisfying(ResponseStatusException.class,
+						ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
 	}
 
 	/** ID を指定してリストを作る */
