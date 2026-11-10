@@ -4,6 +4,7 @@ import com.example.taskmanagement.dto.BoardListResponse;
 import com.example.taskmanagement.dto.CardBulkDeleteRequest;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardMoveRequest;
+import com.example.taskmanagement.dto.CardOrderRequest;
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
@@ -234,6 +235,32 @@ public class BoardService {
 		if (isOtherList) {
 			renumber(fromCards, fromListId);
 		}
+	}
+
+	/**
+	 * リストのカードを、送られてきた ID の順番に並べ替えて、DB に保存する（UC-12。並べ替えの計算は画面で行う）。
+	 * 全部のカードを1つの処理（トランザクション）で書き換えるので、全部成功するか、全部取り消すかのどちらかになる。
+	 * リストがなければ 404、送られてきた ID がそのリストのカードとちょうど同じでなければ 409 にする
+	 * （ほかの画面で、先にカードを追加・削除・移動していたときなど）。
+	 */
+	@Transactional
+	public void reorderCards(Long listId, CardOrderRequest request) {
+		if (!taskListRepository.existsById(listId)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "リストが見つかりません（id=" + listId + "）");
+		}
+
+		List<Card> cards = cardRepository.findByListIdOrderByPositionAsc(listId);
+		Map<Long, Card> cardsById = cards.stream().collect(Collectors.toMap(Card::getId, card -> card));
+		List<Long> ids = request.cardIds();
+		boolean sameCards = ids.size() == cards.size()
+				&& ids.stream().distinct().count() == ids.size()
+				&& cardsById.keySet().containsAll(ids);
+		if (!sameCards) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "リストのカードが変わっています。画面を読み込み直してください。");
+		}
+
+		List<Card> ordered = ids.stream().map(cardsById::get).toList();
+		renumber(ordered, listId);
 	}
 
 	/** カードの並び順を、上から 0, 1, 2… に振り直す。 */

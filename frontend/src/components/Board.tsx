@@ -12,6 +12,7 @@ import {
 import { arrayMove } from '@dnd-kit/sortable'
 import { useState } from 'react'
 import type { Card, Label, List } from '../types'
+import type { SortKey } from '../utils/sortCards'
 import { findListOfCard, moveCardInLists } from '../utils/moveCard'
 import AddItemForm from './AddItemForm'
 import CardView from './CardView'
@@ -58,6 +59,10 @@ type BoardProps = {
   onToggleCard: (cardId: number) => void
   /** 「すべて選択」を押したとき */
   onToggleList: (listId: number) => void
+  /** リストごとの、プルダウンに表示する並べ替えの条件（ないリストは「並べ替え…」） */
+  sortKeys: ReadonlyMap<number, SortKey>
+  /** プルダウンで並べ替えの条件を選んだとき */
+  onSort: (listId: number, key: SortKey) => void
 }
 
 /** ドラッグ＆ドロップの部品の情報から、カードの ID を取り出す（カードでなければ null） */
@@ -84,6 +89,8 @@ function Board({
   selectedCardIds,
   onToggleCard,
   onToggleList,
+  sortKeys,
+  onSort,
 }: BoardProps) {
   // ドラッグ中のカード（ドラッグしていないときは null）
   const [draggingCard, setDraggingCard] = useState<Card | null>(null)
@@ -190,6 +197,8 @@ function Board({
             selectedCardIds={selectedCardIds}
             onToggleCard={onToggleCard}
             onToggleList={onToggleList}
+            sortKey={sortKeys.get(list.id) ?? null}
+            onSort={onSort}
           />
         ))}
         <div className="w-68 shrink-0 rounded-lg bg-[#f1f2f4]/70 p-2">

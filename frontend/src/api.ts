@@ -65,7 +65,7 @@ export function updateCard(id: number, update: CardUpdate): Promise<Card> {
 }
 
 /** 返ってくる中身がない API（204 No Content）を呼ぶ。 */
-async function sendWithoutResult(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<void> {
+async function sendWithoutResult(method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<void> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -84,6 +84,11 @@ export function deleteCard(id: number): Promise<void> {
 /** A-12：完了用リストを指定（isDone が true）・解除（false）する。 */
 export function setListDone(id: number, isDone: boolean): Promise<void> {
   return sendWithoutResult('PATCH', `/lists/${id}/done`, { isDone })
+}
+
+/** A-13：リストのカードを、cardIds の順番（上から）に並べ替えて保存する。 */
+export function reorderCards(listId: number, cardIds: number[]): Promise<void> {
+  return sendWithoutResult('PUT', `/lists/${listId}/card-order`, { cardIds })
 }
 
 /** A-10：リストと中のカードを削除する。 */

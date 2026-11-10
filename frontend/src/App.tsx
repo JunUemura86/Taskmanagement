@@ -11,6 +11,7 @@ import {
   fetchLabels,
   moveCard,
   renameList,
+  reorderCards,
   setListDone,
   updateCard,
 } from './api'
@@ -23,6 +24,7 @@ import type { Label, List } from './types'
 import { setDoneList } from './utils/doneList'
 import { moveCardInLists } from './utils/moveCard'
 import { removeCards, selectedCardIdsOnBoard, toggleCard, toggleList } from './utils/selection'
+import { type SortKey, sortCards } from './utils/sortCards'
 
 // M-06：リストが10個あるのに追加しようとしたとき
 const LIST_LIMIT_ERROR = 'リストは最大10個まで作成できます。'
@@ -49,6 +51,21 @@ function App() {
   const [selectedCardIds, setSelectedCardIds] = useState<ReadonlySet<number>>(new Set())
   // まとめて削除の確認メッセージ（M-02）を出しているときは true
   const [isConfirmingBulkDelete, setIsConfirmingBulkDelete] = useState(false)
+  // リストごとの、プルダウンに表示する並べ替えの条件（F-17）。DB には保存しない（開き直すと「並べ替え…」に戻る）
+  const [sortKeys, setSortKeys] = useState<ReadonlyMap<number, SortKey>>(new Map())
+
+  /**
+   * プルダウンの表示を「並べ替え…」に戻す（並べ替えた状態ではなくなったとき。機能要件 2.6）。
+   * カードをドラッグで動かした・入ってきた・追加した・編集で保存したリストで使う。
+   */
+  function resetSortKeys(...listIds: number[]) {
+    setSortKeys((current) => {
+      if (!listIds.some((id) => current.has(id))) return current
+      const next = new Map(current)
+      for (const id of listIds) next.delete(id)
+      return next
+    })
+  }
 
   useEffect(() => {
     // 画面が閉じられたあとに結果が届いても、使わないようにするための印
@@ -91,6 +108,7 @@ function App() {
   async function handleUpdateCard(cardId: number, update: CardUpdate): Promise<boolean> {
     try {
       const updated = await updateCard(cardId, update)
+      resetSortKeys(updated.listId)
       setLists((current) =>
         current.map((list) => ({
           ...list,
@@ -124,6 +142,7 @@ function App() {
     }
 
     setLists(moveCardInLists(before, cardId, listId, index))
+    resetSortKeys(fromList.id, toList.id)
     try {
       await moveCard(cardId, listId, index)
       setNotice(null)
@@ -201,6 +220,31 @@ function App() {
     }
   }
 
+  /**
+   * リストのカードを、プルダウンで選んだ条件で並べ替える（A-13）。先に画面を並べ替えてから保存する。
+   * 保存できなかったら、元の並びに戻し、プルダウンも「並べ替え…」に戻して M-08 を表示する。
+   */
+  async function handleSort(listId: number, key: SortKey) {
+    const before = lists
+    const list = before.find((l) => l.id === listId)
+    if (!list) return
+
+    // カテゴリ別のときに使う、ラベルの並び順（赤 → 黄 → 緑 → 青 → 紫）
+    const labelPositions = new Map([...labelsById.values()].map((label) => [label.id, label.position]))
+    const sorted = sortCards(list.cards, key, labelPositions)
+    setLists(before.map((l) => (l.id === listId ? { ...l, cards: sorted } : l)))
+    setSortKeys((current) => new Map(current).set(listId, key))
+    try {
+      await reorderCards(listId, sorted.map((card) => card.id))
+      setNotice(null)
+    } catch (error: unknown) {
+      console.error(error)
+      setLists(before)
+      resetSortKeys(listId)
+      setNotice(CONNECTION_ERROR)
+    }
+  }
+
   /** リストと中のカードを削除する（A-10）。成功したら、ボードからそのリストを消す。 */
   async function handleDeleteList(listId: number) {
     try {
@@ -245,6 +289,7 @@ function App() {
   async function handleAddCard(listId: number, title: string): Promise<boolean> {
     try {
       const card = await createCard(listId, title)
+      resetSortKeys(listId)
       setLists((current) =>
         current.map((list) => (list.id === listId ? { ...list, cards: [...list.cards, card] } : list)),
       )
@@ -281,6 +326,8 @@ function App() {
           onSetDone={(listId, isDone) => void handleSetDone(listId, isDone)}
           selectedCardIds={selectedCardIds}
           onToggleCard={(cardId) => setSelectedCardIds((current) => toggleCard(current, cardId))}
+          sortKeys={sortKeys}
+          onSort={(listId, key) => void handleSort(listId, key)}
           onToggleList={(listId) => {
             const list = lists.find((l) => l.id === listId)
             if (list) setSelectedCardIds((current) => toggleList(current, list))
