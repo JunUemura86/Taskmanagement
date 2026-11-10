@@ -1,8 +1,11 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useCallback, useState } from 'react'
 import type { Label, List } from '../types'
 import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
+import ConfirmDialog from './ConfirmDialog'
+import ListMenu from './ListMenu'
 import ListNameEditor from './ListNameEditor'
 import { cardDndId, type DndData, listDndId } from './dnd'
 
@@ -19,6 +22,8 @@ type ListColumnProps = {
   onOpenCard: (cardId: number) => void
   /** リスト名を変更する */
   onRenameList: (listId: number, name: string) => void
+  /** リストと中のカードを削除する */
+  onDeleteList: (listId: number) => void
 }
 
 /**
@@ -26,7 +31,11 @@ type ListColumnProps = {
  * 中のカードは、ドラッグ＆ドロップで並べ替えられる（SortableContext）。
  * リスト全体も、カードを置ける場所になる（カードのないリストや、カードの下の何もないところに置けるようにするため）。
  */
-function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList }: ListColumnProps) {
+function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList, onDeleteList }: ListColumnProps) {
+  // 削除の確認メッセージ（M-03）を出しているときは true
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  // 確認メッセージの Esc の設定が毎回作り直されないよう、同じ関数を使い続ける
+  const cancelDelete = useCallback(() => setIsConfirmingDelete(false), [])
   const data: DndData = { type: 'list', listId: list.id }
   const { setNodeRef } = useDroppable({ id: listDndId(list.id), data })
 
@@ -40,6 +49,11 @@ function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList }: L
             ✓
           </span>
         )}
+        {/* 「…」メニュー（「完了用リストにする／解除」は F-15 で足す） */}
+        <ListMenu
+          listName={list.name}
+          items={[{ label: 'リストを削除', onSelect: () => setIsConfirmingDelete(true), isDanger: true }]}
+        />
       </h2>
       {/* 縦に並んだカードとして、並べ替えられるようにする */}
       <SortableContext items={list.cards.map((card) => cardDndId(card.id))} strategy={verticalListSortingStrategy}>
@@ -66,6 +80,19 @@ function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList }: L
           onAdd={(title) => onAddCard(list.id, title)}
         />
       </div>
+
+      {isConfirmingDelete && (
+        // M-03：リストの削除の確認メッセージ（SC-03）
+        <ConfirmDialog
+          message={`リスト「${list.name}」を削除します。中のカード${list.cards.length}件も削除されます。よろしいですか？`}
+          confirmLabel="削除"
+          onConfirm={() => {
+            setIsConfirmingDelete(false)
+            onDeleteList(list.id)
+          }}
+          onCancel={cancelDelete}
+        />
+      )}
     </section>
   )
 }

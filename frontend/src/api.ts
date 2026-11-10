@@ -81,6 +81,11 @@ export function deleteCard(id: number): Promise<void> {
   return sendWithoutResult('DELETE', `/cards/${id}`)
 }
 
+/** A-10：リストと中のカードを削除する。 */
+export function deleteList(id: number): Promise<void> {
+  return sendWithoutResult('DELETE', `/lists/${id}`)
+}
+
 /** A-08：カードを、listId のリストの index 番目（0 から数える。動かすカード自身を除く）に動かす。 */
 export function moveCard(id: number, listId: number, index: number): Promise<void> {
   return sendWithoutResult('PATCH', `/cards/${id}/position`, { listId, index })
