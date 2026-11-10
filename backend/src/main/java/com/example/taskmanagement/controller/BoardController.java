@@ -7,6 +7,8 @@ import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.dto.ListRenameRequest;
+import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.service.BoardService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -50,6 +52,12 @@ public class BoardController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public BoardListResponse createList(@Valid @RequestBody ListCreateRequest request) {
 		return boardService.createList(request);
+	}
+
+	/** PATCH /api/lists/{id}：リスト名を変更し、変更したあとのリスト（カードは含まない）を返す。 */
+	@PatchMapping("/lists/{id}")
+	public ListResponse renameList(@PathVariable Long id, @Valid @RequestBody ListRenameRequest request) {
+		return boardService.renameList(id, request);
 	}
 
 	/** POST /api/cards：カードをリストの一番下に追加し、作ったカードを返す（201 Created）。 */

@@ -8,6 +8,7 @@ import {
   fetchBoard,
   fetchLabels,
   moveCard,
+  renameList,
   updateCard,
 } from './api'
 import Board from './components/Board'
@@ -150,6 +151,29 @@ function App() {
   const editingCard =
     editingCardId === null ? undefined : lists.flatMap((list) => list.cards).find((card) => card.id === editingCardId)
 
+  /**
+   * リスト名を変更する（A-09）。先に画面の名前を変えてから保存する。
+   * 保存できなかったら、元の名前に戻して M-08 を表示する。
+   */
+  async function handleRenameList(listId: number, name: string) {
+    const oldName = lists.find((list) => list.id === listId)?.name
+    if (oldName === undefined) return
+    const setName = (newName: string) =>
+      setLists((current) => current.map((list) => (list.id === listId ? { ...list, name: newName } : list)))
+
+    setName(name)
+    try {
+      const renamed = await renameList(listId, name)
+      // サーバーが保存した名前（前後の空白を取り除いたもの）にそろえる
+      setName(renamed.name)
+      setNotice(null)
+    } catch (error: unknown) {
+      console.error(error)
+      setName(oldName)
+      setNotice(CONNECTION_ERROR)
+    }
+  }
+
   /** カードを追加する（A-04）。成功したら、そのリストの一番下に足して true を返す。 */
   async function handleAddCard(listId: number, title: string): Promise<boolean> {
     try {
@@ -185,6 +209,7 @@ function App() {
           onAddList={handleAddList}
           onOpenCard={setEditingCardId}
           onMoveCard={(cardId, listId, index) => void handleMoveCard(cardId, listId, index)}
+          onRenameList={(listId, name) => void handleRenameList(listId, name)}
         />
       )}
       {editingCard && (
