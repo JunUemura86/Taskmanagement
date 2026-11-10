@@ -2,8 +2,10 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useCallback, useState } from 'react'
 import type { Label, List } from '../types'
+import { listSelectionState } from '../utils/selection'
 import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
+import Checkbox from './Checkbox'
 import ConfirmDialog from './ConfirmDialog'
 import ListMenu from './ListMenu'
 import ListNameEditor from './ListNameEditor'
@@ -24,6 +26,12 @@ type ListColumnProps = {
   onRenameList: (listId: number, name: string) => void
   /** リストと中のカードを削除する */
   onDeleteList: (listId: number) => void
+  /** チェックボックスで選んだカードの ID */
+  selectedCardIds: ReadonlySet<number>
+  /** カードのチェックボックスを押したとき */
+  onToggleCard: (cardId: number) => void
+  /** 「すべて選択」を押したとき */
+  onToggleList: (listId: number) => void
 }
 
 /**
@@ -31,7 +39,18 @@ type ListColumnProps = {
  * 中のカードは、ドラッグ＆ドロップで並べ替えられる（SortableContext）。
  * リスト全体も、カードを置ける場所になる（カードのないリストや、カードの下の何もないところに置けるようにするため）。
  */
-function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList, onDeleteList }: ListColumnProps) {
+function ListColumn({
+  list,
+  labelsById,
+  onAddCard,
+  onOpenCard,
+  onRenameList,
+  onDeleteList,
+  selectedCardIds,
+  onToggleCard,
+  onToggleList,
+}: ListColumnProps) {
+  const selection = listSelectionState(list, selectedCardIds)
   // 削除の確認メッセージ（M-03）を出しているときは true
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   // 確認メッセージの Esc の設定が毎回作り直されないよう、同じ関数を使い続ける
@@ -41,7 +60,15 @@ function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList, onD
 
   return (
     <section ref={setNodeRef} className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
-      <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
+      <h2 className="flex items-center gap-1.5 pt-1 pb-2 pl-1 font-bold">
+        {/* 「すべて選択」：一部だけ選んでいるときは「－」の表示。カードがないときは押せない */}
+        <Checkbox
+          checked={selection === 'all'}
+          indeterminate={selection === 'some'}
+          disabled={list.cards.length === 0}
+          label={`リスト「${list.name}」のカードをすべて選択`}
+          onToggle={() => onToggleList(list.id)}
+        />
         {/* リスト名：クリックすると変更できる */}
         <ListNameEditor name={list.name} onRename={(name) => onRenameList(list.id, name)} />
         {list.isDone && (
@@ -65,6 +92,8 @@ function ListColumn({ list, labelsById, onAddCard, onOpenCard, onRenameList, onD
                 label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
                 isDoneList={list.isDone}
                 onOpen={() => onOpenCard(card.id)}
+                isSelected={selectedCardIds.has(card.id)}
+                onToggleSelect={() => onToggleCard(card.id)}
               />
             </li>
           ))}

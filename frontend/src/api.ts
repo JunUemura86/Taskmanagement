@@ -65,7 +65,7 @@ export function updateCard(id: number, update: CardUpdate): Promise<Card> {
 }
 
 /** 返ってくる中身がない API（204 No Content）を呼ぶ。 */
-async function sendWithoutResult(method: 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<void> {
+async function sendWithoutResult(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<void> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -84,6 +84,11 @@ export function deleteCard(id: number): Promise<void> {
 /** A-10：リストと中のカードを削除する。 */
 export function deleteList(id: number): Promise<void> {
   return sendWithoutResult('DELETE', `/lists/${id}`)
+}
+
+/** A-11：選んだカードを、まとめて削除する。 */
+export function deleteCards(cardIds: number[]): Promise<void> {
+  return sendWithoutResult('POST', '/cards/bulk-delete', { cardIds })
 }
 
 /** A-08：カードを、listId のリストの index 番目（0 から数える。動かすカード自身を除く）に動かす。 */

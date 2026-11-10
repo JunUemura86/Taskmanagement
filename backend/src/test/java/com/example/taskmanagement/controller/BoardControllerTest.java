@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.taskmanagement.dto.BoardListResponse;
+import com.example.taskmanagement.dto.CardBulkDeleteRequest;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardResponse;
@@ -286,6 +287,36 @@ class BoardControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"listId\":2,\"index\":0}"))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void カードをまとめて削除すると204が返る() throws Exception {
+		mockMvc.perform(post("/api/cards/bulk-delete")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"cardIds\":[1,2,3]}"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).deleteCards(new CardBulkDeleteRequest(List.of(1L, 2L, 3L)));
+	}
+
+	@Test
+	void まとめて削除でカードIDが空だと400になる() throws Exception {
+		mockMvc.perform(post("/api/cards/bulk-delete")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"cardIds\":[]}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).deleteCards(any());
+	}
+
+	@Test
+	void まとめて削除でカードIDがないと400になる() throws Exception {
+		mockMvc.perform(post("/api/cards/bulk-delete")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).deleteCards(any());
 	}
 
 	@Test

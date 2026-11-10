@@ -1,6 +1,7 @@
 package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.dto.BoardListResponse;
+import com.example.taskmanagement.dto.CardBulkDeleteRequest;
 import com.example.taskmanagement.dto.CardCreateRequest;
 import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardResponse;
@@ -92,6 +93,16 @@ public class BoardController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteCard(@PathVariable Long id) {
 		boardService.deleteCard(id);
+	}
+
+	/**
+	 * POST /api/cards/bulk-delete：選んだカードをまとめて削除する。返す中身はない（204 No Content）。
+	 * 削除する ID の一覧を本文で送るため、DELETE ではなく POST にしている（DELETE に本文を付けるのは避けるのが一般的なため）。
+	 */
+	@PostMapping("/cards/bulk-delete")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteCards(@Valid @RequestBody CardBulkDeleteRequest request) {
+		boardService.deleteCards(request);
 	}
 
 	/** GET /api/labels：ラベルの一覧を返す。 */
