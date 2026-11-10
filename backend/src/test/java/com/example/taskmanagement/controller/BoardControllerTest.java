@@ -175,6 +175,22 @@ class BoardControllerTest {
 	}
 
 	@Test
+	void リストを削除すると204が返る() throws Exception {
+		mockMvc.perform(delete("/api/lists/10"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).deleteList(10L);
+	}
+
+	@Test
+	void ないリストを削除すると404になる() throws Exception {
+		willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND)).given(boardService).deleteList(999L);
+
+		mockMvc.perform(delete("/api/lists/999"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
 	void カードを変更すると200と変更したあとのカードが返る() throws Exception {
 		given(boardService.updateCard(1L, new CardUpdateRequest("資料作成", 1, LocalDate.of(2026, 11, 20), 3L)))
 				.willReturn(new CardResponse(1L, 10L, 3L, "資料作成", 1, LocalDate.of(2026, 11, 20), 0));

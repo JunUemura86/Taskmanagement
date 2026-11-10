@@ -102,6 +102,18 @@ public class BoardService {
 		return ListResponse.from(list);
 	}
 
+	/**
+	 * リストを DB から削除する。中のカードは、DB の設定（ON DELETE CASCADE）で一緒に消える。
+	 * リストがなければ 404 にする。
+	 */
+	@Transactional
+	public void deleteList(Long id) {
+		if (!taskListRepository.existsById(id)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "リストが見つかりません（id=" + id + "）");
+		}
+		taskListRepository.deleteById(id);
+	}
+
 	/** リスト名の前後の空白を取り除き、空・改行入りなら 400 にする（空白だけの入力は「空」として扱う）。 */
 	private String normalizeListName(String rawName) {
 		String name = rawName.strip();

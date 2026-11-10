@@ -5,6 +5,7 @@ import {
   createCard,
   createList,
   deleteCard,
+  deleteList,
   fetchBoard,
   fetchLabels,
   moveCard,
@@ -174,6 +175,22 @@ function App() {
     }
   }
 
+  /** リストと中のカードを削除する（A-10）。成功したら、ボードからそのリストを消す。 */
+  async function handleDeleteList(listId: number) {
+    try {
+      await deleteList(listId)
+    } catch (error: unknown) {
+      // 404（もう消えている）のときは、画面からも消せばよいので、失敗として扱わない
+      if (!(error instanceof ApiError && error.status === 404)) {
+        console.error(error)
+        setNotice(CONNECTION_ERROR)
+        return
+      }
+    }
+    setLists((current) => current.filter((list) => list.id !== listId))
+    setNotice(null)
+  }
+
   /** カードを追加する（A-04）。成功したら、そのリストの一番下に足して true を返す。 */
   async function handleAddCard(listId: number, title: string): Promise<boolean> {
     try {
@@ -210,6 +227,7 @@ function App() {
           onOpenCard={setEditingCardId}
           onMoveCard={(cardId, listId, index) => void handleMoveCard(cardId, listId, index)}
           onRenameList={(listId, name) => void handleRenameList(listId, name)}
+          onDeleteList={(listId) => void handleDeleteList(listId)}
         />
       )}
       {editingCard && (

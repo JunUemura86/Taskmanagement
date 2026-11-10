@@ -60,6 +60,13 @@ public class BoardController {
 		return boardService.renameList(id, request);
 	}
 
+	/** DELETE /api/lists/{id}：リストと中のカードを削除する。返す中身はない（204 No Content）。 */
+	@DeleteMapping("/lists/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteList(@PathVariable Long id) {
+		boardService.deleteList(id);
+	}
+
 	/** POST /api/cards：カードをリストの一番下に追加し、作ったカードを返す（201 Created）。 */
 	@PostMapping("/cards")
 	@ResponseStatus(HttpStatus.CREATED)
