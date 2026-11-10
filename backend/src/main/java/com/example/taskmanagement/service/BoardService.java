@@ -8,6 +8,7 @@ import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
+import com.example.taskmanagement.dto.ListDoneRequest;
 import com.example.taskmanagement.dto.ListRenameRequest;
 import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.entity.Card;
@@ -101,6 +102,29 @@ public class BoardService {
 		// 書き換えるだけで、処理の終わりに JPA が自動で DB に保存する
 		list.rename(name);
 		return ListResponse.from(list);
+	}
+
+	/**
+	 * 完了用リストを指定・解除し、DB に保存する（UC-11）。
+	 * 指定するときは、それまで完了用だったリストの指定を外す（完了用リストは1つだけ）。
+	 * リストがなければ 404 にする。
+	 */
+	@Transactional
+	public void setListDone(Long id, ListDoneRequest request) {
+		TaskList list = taskListRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "リストが見つかりません（id=" + id + "）"));
+
+		if (request.isDone()) {
+			taskListRepository.findByDoneTrue()
+					.filter(current -> !current.getId().equals(id))
+					.ifPresent(current -> {
+						current.changeDone(false);
+						// DB には「完了用リストは1つだけ」のしくみがあるので、先に古い方の解除を DB に書き込んでおく
+						// （書き込む順番が逆になると、一瞬だけ完了用が2つになり、DB に断られるため）
+						taskListRepository.flush();
+					});
+		}
+		list.changeDone(request.isDone());
 	}
 
 	/**

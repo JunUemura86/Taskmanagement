@@ -11,6 +11,9 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long> {
 	/** すべてのリストを、並び順（左から）で取り出す。 */
 	List<TaskList> findAllByOrderByPositionAsc();
 
+	/** 今の完了用リストを取り出す。完了用リストがなければ空（DB のしくみで、完了用リストは1つ以下）。 */
+	Optional<TaskList> findByDoneTrue();
+
 	/** 一番右（position が一番大きい）のリストを取り出す。リストがなければ空。 */
 	Optional<TaskList> findTopByOrderByPositionDesc();
 }

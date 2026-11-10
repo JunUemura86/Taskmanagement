@@ -3,9 +3,13 @@ package com.example.taskmanagement.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import com.example.taskmanagement.dto.CardMoveRequest;
+import com.example.taskmanagement.dto.ListDoneRequest;
 import com.example.taskmanagement.entity.Card;
+import com.example.taskmanagement.entity.TaskList;
 import com.example.taskmanagement.repository.CardRepository;
 import com.example.taskmanagement.repository.LabelRepository;
 import com.example.taskmanagement.repository.TaskListRepository;
@@ -140,6 +144,51 @@ class BoardServiceTest {
 		// 動かしていない
 		assertThat(a.getListId()).isEqualTo(1L);
 		assertThat(a.getPosition()).isEqualTo(0);
+	}
+
+	/** ID を指定してリストを作る */
+	private static TaskList list(Long id, String name, boolean done) {
+		TaskList list = new TaskList(name, 0);
+		ReflectionTestUtils.setField(list, "id", id);
+		list.changeDone(done);
+		return list;
+	}
+
+	@Test
+	void 完了用リストを指定すると前の完了用リストの指定が外れる() {
+		TaskList doing = list(2L, "進行中", false);
+		TaskList done = list(3L, "完了", true);
+		given(taskListRepository.findById(2L)).willReturn(Optional.of(doing));
+		given(taskListRepository.findByDoneTrue()).willReturn(Optional.of(done));
+
+		boardService.setListDone(2L, new ListDoneRequest(true));
+
+		assertThat(doing.getDone()).isTrue();
+		assertThat(done.getDone()).isFalse();
+		// 古い方の解除を、新しい方の指定より先に DB に書き込んでいる
+		verify(taskListRepository).flush();
+	}
+
+	@Test
+	void 完了用リストをもう一度指定しても完了用のまま() {
+		TaskList done = list(3L, "完了", true);
+		given(taskListRepository.findById(3L)).willReturn(Optional.of(done));
+		given(taskListRepository.findByDoneTrue()).willReturn(Optional.of(done));
+
+		boardService.setListDone(3L, new ListDoneRequest(true));
+
+		assertThat(done.getDone()).isTrue();
+		verify(taskListRepository, never()).flush();
+	}
+
+	@Test
+	void 完了用リストを解除すると完了用リストがない状態になる() {
+		TaskList done = list(3L, "完了", true);
+		given(taskListRepository.findById(3L)).willReturn(Optional.of(done));
+
+		boardService.setListDone(3L, new ListDoneRequest(false));
+
+		assertThat(done.getDone()).isFalse();
 	}
 
 	@Test

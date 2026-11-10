@@ -81,6 +81,11 @@ export function deleteCard(id: number): Promise<void> {
   return sendWithoutResult('DELETE', `/cards/${id}`)
 }
 
+/** A-12：完了用リストを指定（isDone が true）・解除（false）する。 */
+export function setListDone(id: number, isDone: boolean): Promise<void> {
+  return sendWithoutResult('PATCH', `/lists/${id}/done`, { isDone })
+}
+
 /** A-10：リストと中のカードを削除する。 */
 export function deleteList(id: number): Promise<void> {
   return sendWithoutResult('DELETE', `/lists/${id}`)

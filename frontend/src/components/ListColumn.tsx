@@ -26,6 +26,8 @@ type ListColumnProps = {
   onRenameList: (listId: number, name: string) => void
   /** リストと中のカードを削除する */
   onDeleteList: (listId: number) => void
+  /** 完了用リストを指定（true）・解除（false）する */
+  onSetDone: (listId: number, isDone: boolean) => void
   /** チェックボックスで選んだカードの ID */
   selectedCardIds: ReadonlySet<number>
   /** カードのチェックボックスを押したとき */
@@ -46,6 +48,7 @@ function ListColumn({
   onOpenCard,
   onRenameList,
   onDeleteList,
+  onSetDone,
   selectedCardIds,
   onToggleCard,
   onToggleList,
@@ -76,10 +79,15 @@ function ListColumn({
             ✓
           </span>
         )}
-        {/* 「…」メニュー（「完了用リストにする／解除」は F-15 で足す） */}
+        {/* 「…」メニュー。押し間違いを防ぐため、リストの削除はこの中に置く */}
         <ListMenu
           listName={list.name}
-          items={[{ label: 'リストを削除', onSelect: () => setIsConfirmingDelete(true), isDanger: true }]}
+          items={[
+            list.isDone
+              ? { label: '完了用リストを解除', onSelect: () => onSetDone(list.id, false) }
+              : { label: '完了用リストにする', onSelect: () => onSetDone(list.id, true) },
+            { label: 'リストを削除', onSelect: () => setIsConfirmingDelete(true), isDanger: true },
+          ]}
         />
       </h2>
       {/* 縦に並んだカードとして、並べ替えられるようにする */}
