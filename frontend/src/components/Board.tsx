@@ -17,7 +17,7 @@ import { findListOfCard, moveCardInLists } from '../utils/moveCard'
 import AddItemForm from './AddItemForm'
 import CardView from './CardView'
 import Checkbox from './Checkbox'
-import { boardCollision, type DndData, listSortDndId } from './dnd'
+import { boardCollision, type DndData, listOfDropTarget, listSortDndId } from './dnd'
 import ListColumn from './ListColumn'
 
 // M-04：リスト名が空のとき
@@ -146,15 +146,11 @@ function Board({
     if (!dragLists || cardId === null || !over) return
 
     const fromList = findListOfCard(dragLists, cardId)
-    const overData = over.data.current as DndData | undefined
-    const overCardId = cardIdOf(overData)
-    const toList =
-      overCardId !== null
-        ? findListOfCard(dragLists, overCardId)
-        : dragLists.find((list) => overData?.type === 'list' && list.id === overData.listId)
+    const overCardId = cardIdOf(over.data.current)
+    const toList = listOfDropTarget(dragLists, over.data.current)
     if (!fromList || !toList || fromList.id === toList.id) return
 
-    // 100枚あるリストには入れない（離しても動かさない）
+    // 100枚あるリストには入れない（離したときに handleDragEnd で M-07 を出す）
     if (toList.cards.length >= MAX_CARDS_PER_LIST) return
 
     // カードの上なら、そのカードの上半分で「前」、下半分で「後」。リストの何もないところなら一番下
@@ -182,6 +178,14 @@ function Board({
 
     const list = findListOfCard(current, cardId)
     if (!list) return
+
+    // 100枚ある別のリストの上で離したとき（UC-05）：カードは動かさずに、App に M-07 を出してもらう。
+    // App の onMoveCard は、移動先に100枚あるときは保存せずに M-07 を出すので、それを使う（index は使われない）
+    const overList = listOfDropTarget(current, over.data.current)
+    if (overList && overList.id !== list.id && overList.cards.length >= MAX_CARDS_PER_LIST) {
+      onMoveCard(cardId, overList.id, overList.cards.length)
+      return
+    }
 
     // 同じリストの中で、別のカードの上で離したときは、そのカードの位置へ動かす
     let cards = list.cards
