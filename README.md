@@ -201,7 +201,7 @@ Docker Desktop を起動してから、次の順番で実行します。サー�
 | `npm run preview` | `npm run build` で作った完成版を表示して確かめる |
 | `npm run typecheck` | 型のチェックだけをする |
 | `npm test` | テスト（Vitest）を実行する |
-| `npm run lint` | 書き方をチェックする（oxlint） |
+| `npm run lint` | 書き方をチェックする（oxlint。警告が1つでもあれば失敗。設定は `.oxlintrc.json`） |
 
 ### サーバー（`backend` フォルダで実行）
 

@@ -90,6 +90,8 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
     // うしろを暗くして、真ん中に表示する
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
       <div
+        // HTML 標準の <dialog> にするかは、アクセシビリティの見直し（品質チェックの提案 C6）で決める
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
         role="dialog"
         aria-modal="true"
         aria-labelledby="card-edit-title"

@@ -36,6 +36,8 @@ function CardItem({ card, label, isDoneList, onOpen, isSelected, onToggleSelect 
       style={{ transform: CSS.Translate.toString(transform), transition }}
       // マウスで押したまま動かすと、ドラッグが始まる
       {...listeners}
+      // <button> の中にはチェックボックス（押せる部品）を入れられないため、div に role="button" を付けている
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="button"
       tabIndex={0}
       onClick={onOpen}
