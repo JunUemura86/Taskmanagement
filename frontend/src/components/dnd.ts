@@ -1,5 +1,7 @@
 // ドラッグ＆ドロップ（dnd-kit）で使う、名前の付け方と、重なっている場所の探し方。
 import { type CollisionDetection, closestCenter, pointerWithin } from '@dnd-kit/core'
+import type { List } from '../types'
+import { findListOfCard } from '../utils/moveCard'
 
 /**
  * ドラッグ＆ドロップの部品に持たせる情報。
@@ -25,6 +27,19 @@ export function listDndId(listId: number): string {
 /** 並べ替えるものとしての、リストの部品の名前 */
 export function listSortDndId(listId: number): string {
   return `list-sort-${listId}`
+}
+
+/**
+ * カードをドラッグしているときに、マウスの下にある部品（over）が、どのリストのものかを返す。
+ * - カードの上：そのカードが入っているリスト
+ * - リストの何もないところ：そのリスト
+ * - それ以外（並べ替え用のリストなど）・見つからないとき：undefined
+ */
+export function listOfDropTarget(lists: List[], overData: unknown): List | undefined {
+  const data = overData as DndData | undefined
+  if (data?.type === 'card') return findListOfCard(lists, data.cardId)
+  if (data?.type === 'list') return lists.find((list) => list.id === data.listId)
+  return undefined
 }
 
 /** 部品に持たせた情報の種類（card・list・listSort）を取り出す */
