@@ -91,6 +91,11 @@ export function reorderCards(listId: number, cardIds: number[]): Promise<void> {
   return sendWithoutResult('PUT', `/lists/${listId}/card-order`, { cardIds })
 }
 
+/** A-14：リストを、listIds の順番（左から）に並べ替えて保存する。 */
+export function reorderLists(listIds: number[]): Promise<void> {
+  return sendWithoutResult('PUT', '/lists/order', { listIds })
+}
+
 /** A-10：リストと中のカードを削除する。 */
 export function deleteList(id: number): Promise<void> {
   return sendWithoutResult('DELETE', `/lists/${id}`)

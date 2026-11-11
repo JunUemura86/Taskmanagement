@@ -12,6 +12,7 @@ import {
   moveCard,
   renameList,
   reorderCards,
+  reorderLists,
   setListDone,
   updateCard,
 } from './api'
@@ -23,6 +24,7 @@ import Header from './components/Header'
 import type { Label, List } from './types'
 import { setDoneList } from './utils/doneList'
 import { moveCardInLists } from './utils/moveCard'
+import { orderLists } from './utils/orderLists'
 import { removeCards, selectedCardIdsOnBoard, toggleCard, toggleList } from './utils/selection'
 import { type SortKey, sortCards } from './utils/sortCards'
 
@@ -245,6 +247,23 @@ function App() {
     }
   }
 
+  /**
+   * リストを、listIds の順番（左から）に並べ替える（A-14）。先に画面を並べ替えてから保存する。
+   * 保存できなかったら、元の並びに戻して M-08 を表示する。
+   */
+  async function handleReorderLists(listIds: number[]) {
+    const before = lists
+    setLists(orderLists(before, listIds))
+    try {
+      await reorderLists(listIds)
+      setNotice(null)
+    } catch (error: unknown) {
+      console.error(error)
+      setLists(before)
+      setNotice(CONNECTION_ERROR)
+    }
+  }
+
   /** リストと中のカードを削除する（A-10）。成功したら、ボードからそのリストを消す。 */
   async function handleDeleteList(listId: number) {
     try {
@@ -328,6 +347,7 @@ function App() {
           onToggleCard={(cardId) => setSelectedCardIds((current) => toggleCard(current, cardId))}
           sortKeys={sortKeys}
           onSort={(listId, key) => void handleSort(listId, key)}
+          onReorderLists={(listIds) => void handleReorderLists(listIds)}
           onToggleList={(listId) => {
             const list = lists.find((l) => l.id === listId)
             if (list) setSelectedCardIds((current) => toggleList(current, list))

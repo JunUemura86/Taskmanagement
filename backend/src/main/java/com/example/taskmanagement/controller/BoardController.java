@@ -10,6 +10,7 @@ import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.dto.ListDoneRequest;
+import com.example.taskmanagement.dto.ListOrderRequest;
 import com.example.taskmanagement.dto.ListRenameRequest;
 import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.service.BoardService;
@@ -55,6 +56,16 @@ public class BoardController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public BoardListResponse createList(@Valid @RequestBody ListCreateRequest request) {
 		return boardService.createList(request);
+	}
+
+	/**
+	 * PUT /api/lists/order：リストを、送られてきた ID の順番に左から並べ替える。返す中身はない（204 No Content）。
+	 * /lists/{id} の PATCH・DELETE とはメソッドが違うので、URL はぶつからない。
+	 */
+	@PutMapping("/lists/order")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void reorderLists(@Valid @RequestBody ListOrderRequest request) {
+		boardService.reorderLists(request);
 	}
 
 	/** PATCH /api/lists/{id}：リスト名を変更し、変更したあとのリスト（カードは含まない）を返す。 */

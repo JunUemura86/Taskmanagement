@@ -10,6 +10,7 @@ import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.dto.ListDoneRequest;
+import com.example.taskmanagement.dto.ListOrderRequest;
 import com.example.taskmanagement.dto.ListRenameRequest;
 import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.entity.Card;
@@ -138,6 +139,28 @@ public class BoardService {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "リストが見つかりません（id=" + id + "）");
 		}
 		taskListRepository.deleteById(id);
+	}
+
+	/**
+	 * リストを、送られてきた ID の順番に左から並べ替える（UC-13）。
+	 * 今あるリストとちょうど同じ（足りない・多い・同じ ID が2回・知らない ID がない）でなければ 409 にする
+	 * （ほかの画面で、先にリストを追加・削除していたときなど）。
+	 */
+	@Transactional
+	public void reorderLists(ListOrderRequest request) {
+		List<TaskList> lists = taskListRepository.findAll();
+		Map<Long, TaskList> listsById = lists.stream().collect(Collectors.toMap(TaskList::getId, list -> list));
+		List<Long> ids = request.listIds();
+		boolean sameLists = ids.size() == lists.size()
+				&& ids.stream().distinct().count() == ids.size()
+				&& listsById.keySet().containsAll(ids);
+		if (!sameLists) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "リストが変わっています。画面を読み込み直してください。");
+		}
+
+		for (int i = 0; i < ids.size(); i++) {
+			listsById.get(ids.get(i)).moveTo(i);
+		}
 	}
 
 	/** リスト名の前後の空白を取り除き、空・改行入りなら 400 にする（空白だけの入力は「空」として扱う）。 */

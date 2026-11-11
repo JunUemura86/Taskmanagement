@@ -23,6 +23,7 @@ import com.example.taskmanagement.dto.CardUpdateRequest;
 import com.example.taskmanagement.dto.LabelResponse;
 import com.example.taskmanagement.dto.ListCreateRequest;
 import com.example.taskmanagement.dto.ListDoneRequest;
+import com.example.taskmanagement.dto.ListOrderRequest;
 import com.example.taskmanagement.dto.ListRenameRequest;
 import com.example.taskmanagement.dto.ListResponse;
 import com.example.taskmanagement.service.BoardService;
@@ -235,6 +236,36 @@ class BoardControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"cardIds\":[1]}"))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void リストを並べ替えると204が返る() throws Exception {
+		mockMvc.perform(put("/api/lists/order")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listIds\":[3,1,2]}"))
+				.andExpect(status().isNoContent());
+
+		verify(boardService).reorderLists(new ListOrderRequest(List.of(3L, 1L, 2L)));
+	}
+
+	@Test
+	void リストの並べ替えでlistIdsがないと400になる() throws Exception {
+		mockMvc.perform(put("/api/lists/order")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).reorderLists(any());
+	}
+
+	@Test
+	void リストの並べ替えでlistIdsが11件以上だと400になる() throws Exception {
+		mockMvc.perform(put("/api/lists/order")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"listIds\":[1,2,3,4,5,6,7,8,9,10,11]}"))
+				.andExpect(status().isBadRequest());
+
+		verify(boardService, never()).reorderLists(any());
 	}
 
 	@Test

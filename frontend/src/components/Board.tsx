@@ -9,7 +9,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { arrayMove } from '@dnd-kit/sortable'
+import { arrayMove, horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable'
 import { useState } from 'react'
 import type { Card, Label, List } from '../types'
 import type { SortKey } from '../utils/sortCards'
@@ -17,7 +17,7 @@ import { findListOfCard, moveCardInLists } from '../utils/moveCard'
 import AddItemForm from './AddItemForm'
 import CardView from './CardView'
 import Checkbox from './Checkbox'
-import { cardFirstCollision, type DndData } from './dnd'
+import { boardCollision, type DndData, listSortDndId } from './dnd'
 import ListColumn from './ListColumn'
 
 // M-04：リスト名が空のとき
@@ -27,12 +27,20 @@ const EMPTY_NAME_ERROR = 'リスト名を入力してください。'
 const MAX_CARDS_PER_LIST = 100
 
 // 画面の読み上げ（スクリーンリーダー）用の案内。画面の文字はすべて日本語にする
-const SCREEN_READER_INSTRUCTIONS = { draggable: 'マウスで押したまま動かすと、カードを別の場所へ移せます。' }
+const SCREEN_READER_INSTRUCTIONS = {
+  draggable: 'マウスで押したまま動かすと、カードやリストを別の場所へ移せます。',
+}
+/** ドラッグしているのが、カードかリストか（読み上げの文に使う） */
+function thingOf(data: unknown): string {
+  return (data as DndData | undefined)?.type === 'listSort' ? 'リスト' : 'カード'
+}
 const ANNOUNCEMENTS: Announcements = {
-  onDragStart: () => 'カードを持ち上げました。',
-  onDragOver: ({ over }) => (over ? 'カードを置ける場所の上にあります。' : 'カードを置ける場所の外にあります。'),
-  onDragEnd: ({ over }) => (over ? 'カードを置きました。' : 'カードを元の場所に戻しました。'),
-  onDragCancel: () => 'カードを元の場所に戻しました。',
+  onDragStart: ({ active }) => `${thingOf(active.data.current)}を持ち上げました。`,
+  onDragOver: ({ active, over }) =>
+    `${thingOf(active.data.current)}を置ける場所の${over ? '上' : '外'}にあります。`,
+  onDragEnd: ({ active, over }) =>
+    over ? `${thingOf(active.data.current)}を置きました。` : `${thingOf(active.data.current)}を元の場所に戻しました。`,
+  onDragCancel: ({ active }) => `${thingOf(active.data.current)}を元の場所に戻しました。`,
 }
 
 type BoardProps = {
@@ -63,6 +71,8 @@ type BoardProps = {
   sortKeys: ReadonlyMap<number, SortKey>
   /** プルダウンで並べ替えの条件を選んだとき */
   onSort: (listId: number, key: SortKey) => void
+  /** リストを、listIds の順番（左から）に並べ替える */
+  onReorderLists: (listIds: number[]) => void
 }
 
 /** ドラッグ＆ドロップの部品の情報から、カードの ID を取り出す（カードでなければ null） */
@@ -71,10 +81,17 @@ function cardIdOf(data: unknown): number | null {
   return dndData?.type === 'card' ? dndData.cardId : null
 }
 
+/** ドラッグ＆ドロップの部品の情報から、並べ替え用のリストの ID を取り出す（並べ替え用のリストでなければ null） */
+function sortListIdOf(data: unknown): number | null {
+  const dndData = data as DndData | undefined
+  return dndData?.type === 'listSort' ? dndData.listId : null
+}
+
 /**
  * ボード。リストを左から横に並べ、一番右に「＋リストを追加」を置く（多いときは横にスクロールする）。
  * カードをドラッグ＆ドロップで、別のリストや別の位置へ動かせる。
  * ドラッグ中は、まわりのカードがずれて、カードが入る場所が空く。
+ * リストも、見出しのつまみ（⠿）をドラッグして左右の順番を変えられる。ドラッグ中は、まわりのリストが左右にずれる。
  */
 function Board({
   lists,
@@ -91,6 +108,7 @@ function Board({
   onToggleList,
   sortKeys,
   onSort,
+  onReorderLists,
 }: BoardProps) {
   // ドラッグ中のカード（ドラッグしていないときは null）
   const [draggingCard, setDraggingCard] = useState<Card | null>(null)
@@ -98,11 +116,20 @@ function Board({
   // 本当のボード（lists）は、離したときにだけ変える
   const [dragLists, setDragLists] = useState<List[] | null>(null)
   const shownLists = dragLists ?? lists
+  // ドラッグ中のリスト（ドラッグしていないときは null）
+  const [draggingList, setDraggingList] = useState<List | null>(null)
 
   // 5px 以上動かしたときだけドラッグを始める（ただ押しただけなら、今までどおり編集画面を開く）
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   function handleDragStart({ active }: DragStartEvent) {
+    // リストのとき：並べ替えの見た目は dnd-kit がずらして表示してくれるので、ドラッグ中のリストを覚えるだけ
+    const listId = sortListIdOf(active.data.current)
+    if (listId !== null) {
+      setDraggingList(lists.find((list) => list.id === listId) ?? null)
+      return
+    }
+
     const cardId = cardIdOf(active.data.current)
     const card = lists.flatMap((list) => list.cards).find((c) => c.id === cardId)
     if (!card) return
@@ -142,6 +169,11 @@ function Board({
   }
 
   function handleDragEnd({ active, over }: DragEndEvent) {
+    if (sortListIdOf(active.data.current) !== null) {
+      handleListDragEnd(active.data.current, over?.data.current)
+      return
+    }
+
     const cardId = cardIdOf(active.data.current)
     const current = dragLists
     resetDrag()
@@ -168,15 +200,31 @@ function Board({
     onMoveCard(cardId, list.id, index)
   }
 
+  /** リストを離したとき。別のリストの位置で離したら、そこへ動かした並び順を保存する */
+  function handleListDragEnd(activeData: unknown, overData: unknown) {
+    const listId = sortListIdOf(activeData)
+    const overListId = sortListIdOf(overData)
+    resetDrag()
+    // ボードの外で離したとき・元の位置で離したときは、何もしない
+    if (listId === null || overListId === null || listId === overListId) return
+
+    const ids = lists.map((list) => list.id)
+    const from = ids.indexOf(listId)
+    const to = ids.indexOf(overListId)
+    if (from === -1 || to === -1) return
+    onReorderLists(arrayMove(ids, from, to))
+  }
+
   function resetDrag() {
     setDraggingCard(null)
     setDragLists(null)
+    setDraggingList(null)
   }
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={cardFirstCollision}
+      collisionDetection={boardCollision}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -184,23 +232,26 @@ function Board({
       accessibility={{ screenReaderInstructions: SCREEN_READER_INSTRUCTIONS, announcements: ANNOUNCEMENTS }}
     >
       <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-3 overflow-x-auto p-4">
-        {shownLists.map((list) => (
-          <ListColumn
-            key={list.id}
-            list={list}
-            labelsById={labelsById}
-            onAddCard={onAddCard}
-            onOpenCard={onOpenCard}
-            onRenameList={onRenameList}
-            onDeleteList={onDeleteList}
-            onSetDone={onSetDone}
-            selectedCardIds={selectedCardIds}
-            onToggleCard={onToggleCard}
-            onToggleList={onToggleList}
-            sortKey={sortKeys.get(list.id) ?? null}
-            onSort={onSort}
-          />
-        ))}
+        {/* 横に並んだリストとして、並べ替えられるようにする */}
+        <SortableContext items={shownLists.map((list) => listSortDndId(list.id))} strategy={horizontalListSortingStrategy}>
+          {shownLists.map((list) => (
+            <ListColumn
+              key={list.id}
+              list={list}
+              labelsById={labelsById}
+              onAddCard={onAddCard}
+              onOpenCard={onOpenCard}
+              onRenameList={onRenameList}
+              onDeleteList={onDeleteList}
+              onSetDone={onSetDone}
+              selectedCardIds={selectedCardIds}
+              onToggleCard={onToggleCard}
+              onToggleList={onToggleList}
+              sortKey={sortKeys.get(list.id) ?? null}
+              onSort={onSort}
+            />
+          ))}
+        </SortableContext>
         <div className="w-68 shrink-0 rounded-lg bg-[#f1f2f4]/70 p-2">
           <AddItemForm
             buttonLabel="＋リストを追加"
@@ -224,6 +275,28 @@ function Board({
               // チェックボックスは、見せるだけ（押せない）
               leading={<Checkbox checked={selectedCardIds.has(draggingCard.id)} label="選択" />}
             />
+          </div>
+        )}
+        {/* ドラッグ中に、マウスについてくるリスト（リスト名と、中のカードを見せるだけ。押せない） */}
+        {draggingList && (
+          <div className="max-h-[80vh] w-68 rotate-2 cursor-grabbing overflow-hidden rounded-lg bg-[#f1f2f4] p-2 shadow-lg">
+            <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
+              <span className="px-0.5 text-[#626f86]">⠿</span>
+              <span className="truncate">{draggingList.name}</span>
+              {draggingList.isDone && <span className="text-[#1f845a]">✓</span>}
+            </h2>
+            <ul className="flex flex-col gap-2">
+              {draggingList.cards.map((card) => (
+                <li key={card.id}>
+                  <CardView
+                    card={card}
+                    label={card.labelId === null ? undefined : labelsById.get(card.labelId)}
+                    isDoneList={draggingList.isDone}
+                    leading={<Checkbox checked={selectedCardIds.has(card.id)} label="選択" />}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </DragOverlay>

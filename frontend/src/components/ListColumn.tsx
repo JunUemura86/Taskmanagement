@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useCallback, useState } from 'react'
 import type { Label, List } from '../types'
 import { listSelectionState } from '../utils/selection'
@@ -10,7 +11,7 @@ import Checkbox from './Checkbox'
 import ConfirmDialog from './ConfirmDialog'
 import ListMenu from './ListMenu'
 import ListNameEditor from './ListNameEditor'
-import { cardDndId, type DndData, listDndId } from './dnd'
+import { cardDndId, type DndData, listDndId, listSortDndId } from './dnd'
 
 // M-05：カードのタイトルが空のとき
 const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
@@ -45,6 +46,9 @@ type ListColumnProps = {
  * リスト1つ。見出し（リスト名・完了用なら ✓）と、中のカードと、「＋カードを追加」を表示する。
  * 中のカードは、ドラッグ＆ドロップで並べ替えられる（SortableContext）。
  * リスト全体も、カードを置ける場所になる（カードのないリストや、カードの下の何もないところに置けるようにするため）。
+ * 見出しの左端のつまみ（⠿）を押したまま動かすと、リストの左右の順番を変えられる（UC-13）。
+ * ほかのリストをドラッグしているときは、入る場所を空けるために、なめらかに左右にずれる（useSortable）。
+ * ドラッグ中のリスト自身は、入る予定の場所に薄く表示する（マウスについてくるリストは Board の DragOverlay が表示する）。
  */
 function ListColumn({
   list,
@@ -65,12 +69,47 @@ function ListColumn({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
   // 確認メッセージの Esc の設定が毎回作り直されないよう、同じ関数を使い続ける
   const cancelDelete = useCallback(() => setIsConfirmingDelete(false), [])
-  const data: DndData = { type: 'list', listId: list.id }
-  const { setNodeRef } = useDroppable({ id: listDndId(list.id), data })
+  // カードを置く場所としてのリスト
+  const dropData: DndData = { type: 'list', listId: list.id }
+  const { setNodeRef: setDropRef } = useDroppable({ id: listDndId(list.id), data: dropData })
+  // 左右に並べ替えるものとしてのリスト。listeners はつまみにだけ付ける（ほかの場所を押してもリストは動かない）
+  const sortData: DndData = { type: 'listSort', listId: list.id }
+  const {
+    setNodeRef: setSortRef,
+    setActivatorNodeRef,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: listSortDndId(list.id), data: sortData })
+  // 1つの <section> を、両方の部品として使う
+  const setSectionRef = useCallback(
+    (node: HTMLElement | null) => {
+      setDropRef(node)
+      setSortRef(node)
+    },
+    [setDropRef, setSortRef],
+  )
 
   return (
-    <section ref={setNodeRef} className="w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2">
-      <h2 className="flex items-center gap-1.5 pt-1 pb-2 pl-1 font-bold">
+    <section
+      ref={setSectionRef}
+      // ずれる動き（左右に動かす量と、動くときのなめらかさ）
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={`w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2 ${isDragging ? 'opacity-40' : ''}`}
+    >
+      <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
+        {/* つまみ：押したまま左右に動かすと、リストの順番を変えられる */}
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          {...listeners}
+          aria-label={`リスト「${list.name}」を動かす`}
+          title="ドラッグしてリストを動かす"
+          className="shrink-0 cursor-grab touch-none rounded px-0.5 text-[#626f86] hover:bg-[#dcdfe4] active:cursor-grabbing"
+        >
+          ⠿
+        </button>
         {/* 「すべて選択」：一部だけ選んでいるときは「－」の表示。カードがないときは押せない */}
         <Checkbox
           checked={selection === 'all'}
