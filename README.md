@@ -209,6 +209,8 @@ Docker Desktop を起動してから、次の順番で実行します。サー�
 |---|---|
 | `./gradlew bootRun --args='--spring.profiles.active=dev'` | 開発用の設定でサーバーを起動する |
 | `./gradlew test` | テスト（JUnit）を実行する |
+| `./gradlew checkstyleMain checkstyleTest` | 書き方をチェックする（Checkstyle。1つでもあれば失敗。ルールは `config/checkstyle/checkstyle.xml`） |
+| `./gradlew check` | 書き方のチェックとテストを、まとめて実行する（データベースの起動が必要） |
 | `./gradlew build` | テストをしてから、実行用のファイル（`build/libs/*.jar`）を作る |
 | `./gradlew clean` | 作ったファイル（`build` フォルダ）を消す |
 
@@ -230,7 +232,8 @@ Docker Desktop を起動してから、次の順番で実行します。サー�
 | サーバー | `./gradlew test`（`backend` で実行） | `backend/src/test/java/...` |
 
 - サーバーのテストの中には、データベースにつなぐものがあります。先に `docker compose up -d` でデータベースを起動しておいてください
-- PR を出す前に、`npm run typecheck`・`npm run lint`・`npm test`・`./gradlew test` がすべて通ることを確かめます
+- PR を出す前に、`npm run typecheck`・`npm run lint`・`npm test`・`./gradlew check`（書き方のチェックとテスト）がすべて通ることを確かめます
+- サーバーのコンパイルでは、Java の警告が1つでもあれば失敗にしています（`-Xlint:all -Werror`）
 - 完成の確認項目（手で確かめる項目）は [テスト項目](docs/test-checklist.md)（T-01〜T-24）にあります
 
 ## API の一覧
