@@ -57,6 +57,15 @@ public class TaskList {
 		this.updatedAt = OffsetDateTime.now();
 	}
 
+	/** 並び順を変える（左から 0, 1, 2…）。変わらないときは何もしない（更新した時刻も変えない）。 */
+	public void moveTo(int position) {
+		if (this.position == position) {
+			return;
+		}
+		this.position = position;
+		this.updatedAt = OffsetDateTime.now();
+	}
+
 	public Long getId() { return id; }
 	public String getName() { return name; }
 	public Integer getPosition() { return position; }

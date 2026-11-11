@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import com.example.taskmanagement.dto.CardMoveRequest;
 import com.example.taskmanagement.dto.CardOrderRequest;
 import com.example.taskmanagement.dto.ListDoneRequest;
+import com.example.taskmanagement.dto.ListOrderRequest;
 import com.example.taskmanagement.entity.Card;
 import com.example.taskmanagement.entity.TaskList;
 import com.example.taskmanagement.repository.CardRepository;
@@ -199,6 +200,61 @@ class BoardServiceTest {
 		ReflectionTestUtils.setField(list, "id", id);
 		list.changeDone(done);
 		return list;
+	}
+
+	/** 位置を指定してリストを作る */
+	private static TaskList listAt(Long id, String name, int position) {
+		TaskList list = new TaskList(name, position);
+		ReflectionTestUtils.setField(list, "id", id);
+		return list;
+	}
+
+	// 未着手(0) 進行中(1) 完了(2)
+	private List<TaskList> givenThreeLists() {
+		List<TaskList> lists = List.of(listAt(1L, "未着手", 0), listAt(2L, "進行中", 1), listAt(3L, "完了", 2));
+		given(taskListRepository.findAll()).willReturn(lists);
+		return lists;
+	}
+
+	@Test
+	void 送られてきた順番にリストが並べ替えられる() {
+		List<TaskList> lists = givenThreeLists();
+
+		boardService.reorderLists(new ListOrderRequest(List.of(3L, 1L, 2L)));
+
+		// 完了(0) 未着手(1) 進行中(2)
+		assertThat(lists.get(2).getPosition()).isEqualTo(0);
+		assertThat(lists.get(0).getPosition()).isEqualTo(1);
+		assertThat(lists.get(1).getPosition()).isEqualTo(2);
+	}
+
+	@Test
+	void リストの並べ替えでリストが足りないと409になる() {
+		List<TaskList> lists = givenThreeLists();
+
+		assertThatThrownBy(() -> boardService.reorderLists(new ListOrderRequest(List.of(3L, 1L))))
+				.isInstanceOfSatisfying(ResponseStatusException.class,
+						ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+		// 並び順は変わっていない
+		assertThat(lists.get(2).getPosition()).isEqualTo(2);
+	}
+
+	@Test
+	void リストの並べ替えで同じIDが2回あると409になる() {
+		givenThreeLists();
+
+		assertThatThrownBy(() -> boardService.reorderLists(new ListOrderRequest(List.of(1L, 1L, 2L))))
+				.isInstanceOfSatisfying(ResponseStatusException.class,
+						ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+	}
+
+	@Test
+	void リストの並べ替えで知らないIDがあると409になる() {
+		givenThreeLists();
+
+		assertThatThrownBy(() -> boardService.reorderLists(new ListOrderRequest(List.of(3L, 1L, 99L))))
+				.isInstanceOfSatisfying(ResponseStatusException.class,
+						ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
 	}
 
 	@Test
