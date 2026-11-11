@@ -7,7 +7,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書名 | タスク管理アプリ 技術スタック |
-| 版 | 2.5 |
+| 版 | 2.6 |
 | 作成日 | 2026-11-03 |
 
 ## 改訂履歴
@@ -21,6 +21,7 @@
 | 2.3 | 2026-11-09 | フロントエンドの言語を JavaScript から TypeScript に変更 |
 | 2.4 | 2026-11-09 | dnd-kit の版（@dnd-kit/core 6.3.1・@dnd-kit/sortable 10.0.0・@dnd-kit/utilities 3.2.2）を追記 |
 | 2.5 | 2026-11-11 | 実際の構成に合わせた：ビルドの道具を Maven から Gradle（Wrapper 9.8.2）に変更、各ライブラリの版と oxlint・PostgreSQL 18 を追記、起動方法を今動く手順（start.sh はまだない）に変更 |
+| 2.6 | 2026-11-11 | oxlint で見るルールを追記（React・TypeScript・アクセシビリティ・import・テストの書き方。警告も残さない） |
 
 ---
 
@@ -62,7 +63,7 @@
 | 部品 | @tailwindcss/vite | 4.3.5 | Vite と Tailwind CSS をつなぐ |
 | 部品 | dnd-kit（@dnd-kit/core・@dnd-kit/sortable・@dnd-kit/utilities） | 6.3.1・10.0.0・3.2.2 | リストやカードのドラッグ＆ドロップを作る。core が土台、sortable がドラッグ中にまわりのカードやリストをずらす並べ替え、utilities がずらす量の計算 |
 | テストの道具 | Vitest | 5.1.0 | 画面のプログラムが正しく動くかを確かめる（`npm test`） |
-| 書き方のチェック | oxlint | 1.92.0 | プログラムの書き方のまちがいを見つける（`npm run lint`） |
+| 書き方のチェック | oxlint | 1.92.0 | プログラムの書き方のまちがいを見つける（`npm run lint`）。React（フックの使い方・useEffect の依存の書き忘れ）・TypeScript・アクセシビリティ（読み上げ・キーボード操作）・import・テストの書き方のルールを見る。まちがいの可能性が高いものはエラー、怪しいものは警告で、警告が1つでもあれば失敗にする。設定は `frontend/.oxlintrc.json` |
 
 **バックエンド**（`backend/build.gradle`）
 

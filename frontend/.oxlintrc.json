@@ -1,8 +1,26 @@
 {
+  // 書き方のチェック（oxlint）の設定。実行：npm run lint（警告も残さない設定にしている）
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "oxc"],
+  // react：React のルール／typescript：TypeScript のルール／oxc：oxlint 独自のルール／
+  // jsx-a11y：アクセシビリティ（読み上げ・キーボード操作）のルール／import：import の書き方／vitest：テストの書き方
+  "plugins": ["react", "typescript", "oxc", "jsx-a11y", "import", "vitest"],
+  "categories": {
+    // まちがいの可能性が高いものはエラー、怪しいものは警告にする
+    "correctness": "error",
+    "suspicious": "warn"
+  },
   "rules": {
+    // フック（useState など）の呼び方のルール
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    // useEffect などの依存（[] の中）の書き忘れ
+    "react/exhaustive-deps": "error",
+    // 1つのファイルからは部品だけを export する（Vite の画面の自動更新が効くようにするため）
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    // 入力欄を開いたとき・確認画面を出したときに、すぐ入力・操作できるよう、わざと autoFocus を使っているため切る
+    "jsx-a11y/no-autofocus": "off",
+    // React 17 以降は、JSX を書くときに React を import しなくてよいため切る
+    "react/react-in-jsx-scope": "off",
+    // 「import './index.css'」のような、見た目（CSS）の読み込みは許す
+    "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
   }
 }
