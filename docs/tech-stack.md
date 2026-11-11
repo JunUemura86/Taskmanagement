@@ -7,7 +7,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書名 | タスク管理アプリ 技術スタック |
-| 版 | 2.6 |
+| 版 | 2.7 |
 | 作成日 | 2026-11-03 |
 
 ## 改訂履歴
@@ -22,6 +22,7 @@
 | 2.4 | 2026-11-09 | dnd-kit の版（@dnd-kit/core 6.3.1・@dnd-kit/sortable 10.0.0・@dnd-kit/utilities 3.2.2）を追記 |
 | 2.5 | 2026-11-11 | 実際の構成に合わせた：ビルドの道具を Maven から Gradle（Wrapper 9.8.2）に変更、各ライブラリの版と oxlint・PostgreSQL 18 を追記、起動方法を今動く手順（start.sh はまだない）に変更 |
 | 2.6 | 2026-11-11 | oxlint で見るルールを追記（React・TypeScript・アクセシビリティ・import・テストの書き方。警告も残さない） |
+| 2.7 | 2026-11-11 | バックエンドの書き方のチェック（Checkstyle 14.3.0、Java のコンパイルの警告をエラーにする設定）を追記 |
 
 ---
 
@@ -77,6 +78,8 @@
 | 部品 | Flyway | 12.4.0 | テーブルを作る・変える SQL をファイルで管理する |
 | 部品 | PostgreSQL JDBC Driver | 42.7.14 | Java から PostgreSQL につなぐ |
 | テストの道具 | JUnit Jupiter | 6.0.3 | Java のプログラムが正しく動くかを確かめる（`./gradlew test`） |
+| 書き方のチェック | Checkstyle（Gradle 標準の checkstyle プラグイン） | 14.3.0 | Java の書き方のまちがい（使っていない import、`equals` と `hashCode` の片方だけ、`switch` の `default` 忘れ、名前の付け方など）を見つける（`./gradlew checkstyleMain checkstyleTest`）。1つでもあれば失敗にする。ルールは `backend/config/checkstyle/checkstyle.xml`。テストのメソッド名は日本語で書くので、名前の形のチェックから外している |
+| 書き方のチェック | Java のコンパイラの警告（`-Xlint:all -Werror`） | Java 25 に付属 | コンパイルのときに、非推奨の書き方や型の安全でない変換などの警告をすべて出し、1つでもあれば失敗にする（`backend/build.gradle`） |
 
 **データベース**（`docker-compose.yml`）
 
