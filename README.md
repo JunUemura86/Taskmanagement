@@ -8,12 +8,13 @@
 - ボードの表示（リストとカードをデータベースから読み込む）
 - カードの追加・編集（タイトル・優先度・期限・ラベル）・削除
 - ドラッグ＆ドロップでのカードの移動・並べ替え
-- リストの追加・名前の変更・削除
+- 条件（優先度順・期限順・カテゴリ別・追加した順）でのカードの並べ替え
+- リストの追加・名前の変更・削除と、ドラッグでのリストの並べ替え
 - チェックボックスで選んだカードのまとめて削除
 - 完了用リストの指定
 - 期限の色分け（期限切れは赤、今日・明日は黄色）と、優先度のバッジ表示
 
-機能の全体は [機能一覧](docs/feature-list.md)（F-01〜F-17）を参照してください。
+機能の全体は [機能一覧](docs/feature-list.md)（F-01〜F-18）を参照してください。
 
 ## 目次
 
@@ -230,7 +231,7 @@ Docker Desktop を起動してから、次の順番で実行します。サー�
 
 - サーバーのテストの中には、データベースにつなぐものがあります。先に `docker compose up -d` でデータベースを起動しておいてください
 - PR を出す前に、`npm run typecheck`・`npm run lint`・`npm test`・`./gradlew test` がすべて通ることを確かめます
-- 完成の確認項目（手で確かめる項目）は [テスト項目](docs/test-checklist.md)（T-01〜T-23）にあります
+- 完成の確認項目（手で確かめる項目）は [テスト項目](docs/test-checklist.md)（T-01〜T-24）にあります
 
 ## API の一覧
 
@@ -250,6 +251,8 @@ URL の始まりは `http://localhost:8080/api` で、JSON でやり取りしま
 | A-10 | DELETE | `/api/lists/{id}` | リストと中のカードを削除する |
 | A-11 | POST | `/api/cards/bulk-delete` | 選んだカードをまとめて削除する |
 | A-12 | PATCH | `/api/lists/{id}/done` | 完了用リストを指定・解除する |
+| A-13 | PUT | `/api/lists/{id}/card-order` | リストのカードを、送った順番に並べ替える |
+| A-14 | PUT | `/api/lists/order` | リストを、送った順番に左から並べ替える |
 
 送る内容・返す内容・エラーの詳細は [API 設計書](docs/api-design.md) を参照してください。
 
@@ -323,7 +326,7 @@ Taskmanagement/
 | ドキュメント | 内容 |
 |---|---|
 | [要件定義書](docs/requirements.md) | 概要・関連ドキュメントへのリンク・対象外・開発の進め方 |
-| [機能一覧](docs/feature-list.md) | アプリの機能（F-01〜F-17） |
+| [機能一覧](docs/feature-list.md) | アプリの機能（F-01〜F-18） |
 | [機能要件](docs/functional-requirements.md) | ユースケースと機能のルール |
 | [画面設計書](docs/screen-design.md) | 画面の構成・移り変わり・メッセージ |
 | [API 設計書](docs/api-design.md) | API の一覧・送る内容と返す内容・エラー |
@@ -331,5 +334,5 @@ Taskmanagement/
 | [データベース設計書](docs/database-design.md) | テーブル定義 |
 | [非機能要件](docs/non-functional-requirements.md) | 性能・信頼性・セキュリティなど |
 | [技術スタック](docs/tech-stack.md) | システム構成・フレームワーク・動作環境 |
-| [テスト項目](docs/test-checklist.md) | 完成の確認項目（T-01〜T-23） |
+| [テスト項目](docs/test-checklist.md) | 完成の確認項目（T-01〜T-24） |
 | [画面（frontend）の README](frontend/README.md) | 画面のコマンドの一覧 |
