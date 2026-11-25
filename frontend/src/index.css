@@ -7,7 +7,7 @@
  */
 @theme {
   /* 背景と線 */
-  --color-board: #cfc6ee; /* ボードの背景 */
+  --color-board: #ddd6f4; /* ボードの背景 */
   --color-list: #faf9fe; /* リストの背景 */
   --color-list-line: #b3a6dd; /* リストの枠線 */
   --color-line: #d9d2ef; /* カードの枠線・区切り線 */
