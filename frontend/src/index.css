@@ -32,7 +32,6 @@
   /* 操作 */
   --color-primary: #6d5bb8; /* 保存・選択中・アプリのアイコン */
   --color-primary-dark: #5a489f; /* 保存にマウスを乗せたとき */
-  --color-primary-soft: #efecfa; /* 選択中などの薄い面 */
 
   /* 意味のある色 */
   --color-danger: #bf4a5a; /* 削除・優先度「高」 */

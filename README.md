@@ -238,7 +238,7 @@ Docker Desktop を起動してから、次の順番で実行します。サー�
 - サーバーのテストの中には、データベースにつなぐものがあります。先に `docker compose up -d` でデータベースを起動しておいてください
 - PR を出す前に、`npm run typecheck`・`npm run lint`・`npm test`・`./gradlew check`（書き方のチェックとテスト）がすべて通ることを確かめます
 - サーバーのコンパイルでは、Java の警告が1つでもあれば失敗にしています（`-Xlint:all -Werror`）
-- 完成の確認項目（手で確かめる項目）は [テスト項目](docs/test-checklist.md)（T-01〜T-26）にあります
+- 完成の確認項目（手で確かめる項目）は [テスト項目](docs/test-checklist.md)（T-01〜T-28）にあります
 
 ## API の一覧
 
@@ -343,5 +343,5 @@ Taskmanagement/
 | [データベース設計書](docs/database-design.md) | テーブル定義 |
 | [非機能要件](docs/non-functional-requirements.md) | 性能・信頼性・セキュリティなど |
 | [技術スタック](docs/tech-stack.md) | システム構成・フレームワーク・動作環境 |
-| [テスト項目](docs/test-checklist.md) | 完成の確認項目（T-01〜T-26） |
+| [テスト項目](docs/test-checklist.md) | 完成の確認項目（T-01〜T-28） |
 | [画面（frontend）の README](frontend/README.md) | 画面のコマンドの一覧 |

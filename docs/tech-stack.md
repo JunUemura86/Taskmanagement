@@ -7,7 +7,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書名 | タスク管理アプリ 技術スタック |
-| 版 | 2.8 |
+| 版 | 2.9 |
 | 作成日 | 2026-11-03 |
 
 ## 改訂履歴
@@ -24,6 +24,7 @@
 | 2.6 | 2026-11-11 | oxlint で見るルールを追記（React・TypeScript・アクセシビリティ・import・テストの書き方。警告も残さない） |
 | 2.7 | 2026-11-11 | バックエンドの書き方のチェック（Checkstyle 14.3.0、Java のコンパイルの警告をエラーにする設定）を追記 |
 | 2.8 | 2026-11-25 | 画面のデザインのため、shadcn/ui・Base UI・Lucide・react-day-picker・文字（Inter、Noto Sans JP）などを追加 |
+| 2.9 | 2026-11-25 | react-day-picker の使う場所を更新 |
 
 ---
 
@@ -67,7 +68,7 @@
 | 部品 | shadcn/ui（取り込みに使った CLI は 4.23.0） | ― | ボタン・お知らせ欄などの部品。ソースを `frontend/src/components/ui` に取り込み、このアプリに合わせて直して使う（MIT ライセンス） |
 | 部品 | @base-ui/react | 1.9.0 | shadcn/ui の部品の土台。キーボード操作や読み上げへの対応 |
 | 部品 | lucide-react | 1.71.0 | アイコン（ISC ライセンス） |
-| 部品 | react-day-picker | 10.0.2 | カレンダー（編集画面の作り直しで使う） |
+| 部品 | react-day-picker | 10.0.2 | 編集画面の期限を選ぶカレンダー（MIT ライセンス） |
 | 部品 | class-variance-authority・clsx・tailwind-merge・tw-animate-css | 0.7.1・2.1.1・3.7.0・1.4.0 | shadcn/ui の部品の、クラス名の整理と動き |
 | 部品 | @fontsource-variable/inter・@fontsource-variable/noto-sans-jp | 5.3.0・5.3.1 | 文字（Inter・Noto Sans JP。OFL ライセンス）。外部のサイトから読み込まず、アプリに入れる |
 | テストの道具 | Vitest | 5.1.0 | 画面のプログラムが正しく動くかを確かめる（`npm test`） |

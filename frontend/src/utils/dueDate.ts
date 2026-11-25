@@ -15,9 +15,17 @@ export type DueStatus = 'overdue' | 'soon' | 'normal'
  * new Date("2026-11-10") は世界標準時（UTC）の 0 時として扱われ、日本では日付がずれることがあるため、
  * 年・月・日に分けて作る。
  */
-function toLocalDate(dateStr: string): Date {
+export function toLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number)
   return new Date(year, month - 1, day)
+}
+
+/** Date を、パソコンの時刻での日付の "2026-11-10" の形の文字にする（toLocalDate の逆）。 */
+export function toDateString(date: Date): string {
+  const year = String(date.getFullYear()).padStart(4, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /** 今日（パソコンの日付）の 0 時。 */

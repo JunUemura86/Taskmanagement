@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useState, type KeyboardEvent } from 'react'
+import { Check, Trash2 } from 'lucide-react'
+import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import type { CardUpdate } from '../api'
 import type { Card, Label, Priority } from '../types'
+import { isImeEscape } from '../utils/ime'
 import { getPriority } from '../utils/priority'
 import ConfirmDialog from './ConfirmDialog'
+import DueDatePicker from './DueDatePicker'
 
 // M-05：カードのタイトルが空のとき
 const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
@@ -12,6 +18,9 @@ const PRIORITY_OPTIONS: Priority[] = [1, 2, 3]
 
 /** 選んでいるボタンの見た目（紫の枠） */
 const SELECTED = 'ring-2 ring-primary ring-offset-1'
+
+/** 欄の見出しの見た目 */
+const FIELD_LABEL = 'mb-1.5 block text-xs font-medium text-sub'
 
 type CardEditDialogProps = {
   card: Card
@@ -27,7 +36,7 @@ type CardEditDialogProps = {
 
 /**
  * カード編集画面（SC-02）。メイン画面の上に重ねて表示する。
- * タイトル・優先度・期限・ラベルを変えて「保存」する。「×」と Esc は保存せずに閉じる。
+ * タイトル・優先度・期限・ラベルを変えて「保存」する。「×」と Esc は保存せずに閉じる（背景を押しても閉じない）。
  * 「削除」は、確認メッセージ（M-01）で「OK」を押したときだけ削除する。
  */
 function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDialogProps) {
@@ -45,15 +54,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
   // 確認メッセージの Esc の設定が毎回作り直されないよう、同じ関数を使い続ける
   const cancelDelete = useCallback(() => setIsConfirmingDelete(false), [])
 
-  // Esc キーで閉じる（日本語入力の変換中の Esc は、変換の取り消しなので無視する）
-  useEffect(() => {
-    function handleKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.isComposing || event.keyCode === 229) return
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  const titleRef = useRef<HTMLInputElement>(null)
 
   async function save() {
     // 前後の空白を取り除く（空白だけの入力は「空」として扱う）
@@ -87,38 +88,31 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
   }
 
   return (
-    // うしろを暗くして、真ん中に表示する
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink/40 p-4">
-      <div
-        // HTML 標準の <dialog> にするかは、アクセシビリティの見直し（品質チェックの提案 C6）で決める
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="card-edit-title"
-        className="w-full max-w-sm rounded-xl bg-white shadow-xl"
-      >
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h2 id="card-edit-title" className="font-bold">
-            カードの編集
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="閉じる"
-            className="rounded px-2 text-xl leading-none text-sub hover:bg-soft"
-          >
-            ×
-          </button>
-        </div>
+    <Dialog
+      open
+      // 書きかけの内容をまちがって消さないよう、背景を押しても閉じない
+      disablePointerDismissal
+      onOpenChange={(open, details) => {
+        if (open) return
+        // 日本語入力の変換中の Esc は、変換の取り消しなので無視する
+        if (isImeEscape(details.event)) details.cancel()
+        else onClose()
+      }}
+    >
+      <DialogContent initialFocus={titleRef} className="gap-5 sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>カードの編集</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex flex-col gap-4 px-4 py-4 text-sm">
+        <div className="flex flex-col gap-5">
           {/* タイトル */}
           <div>
-            <label htmlFor="card-edit-title-input" className="mb-1 block font-bold text-sub">
+            <label htmlFor="card-edit-title-input" className={FIELD_LABEL}>
               タイトル（必須）
             </label>
-            <input
+            <Input
               id="card-edit-title-input"
+              ref={titleRef}
               type="text"
               value={title}
               onChange={(event) => {
@@ -128,16 +122,15 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
               onKeyDown={handleTitleKeyDown}
               maxLength={100}
               aria-invalid={error !== null}
-              autoFocus
-              className="w-full rounded-md border border-input-line px-2 py-1.5 outline-none focus:border-primary"
+              className="h-9"
             />
             {error && <p className="mt-1 px-1 text-xs text-danger-dark">{error}</p>}
           </div>
 
-          {/* 優先度：選んでいるものは紫の枠、ほかは薄く表示する */}
+          {/* 優先度：選んでいるものは、その優先度の色にして紫の枠で囲む */}
           <fieldset>
-            <legend className="mb-1 font-bold text-sub">優先度</legend>
-            <div className="flex gap-2">
+            <legend className={FIELD_LABEL}>優先度</legend>
+            <div className="grid grid-cols-3 gap-2.5">
               {PRIORITY_OPTIONS.map((value) => {
                 const style = getPriority(value)
                 const isSelected = priority === value
@@ -147,7 +140,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
                     type="button"
                     onClick={() => setPriority(value)}
                     aria-pressed={isSelected}
-                    className={`rounded-full border px-3 py-0.5 font-bold ${style.className} ${isSelected ? SELECTED : 'opacity-60 hover:opacity-80'}`}
+                    className={`h-9 cursor-pointer rounded-lg border text-sm font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${isSelected ? `${style.className} ${SELECTED}` : 'border-line bg-white text-sub hover:bg-soft'}`}
                   >
                     {style.text}
                   </button>
@@ -158,37 +151,21 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
 
           {/* 期限：カレンダーから選ぶ。「クリア」でなしにできる */}
           <div>
-            <label htmlFor="card-edit-due-date" className="mb-1 block font-bold text-sub">
+            <p id="card-edit-due-date-label" className={FIELD_LABEL}>
               期限
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="card-edit-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
-                className="rounded-md border border-input-line px-2 py-1 outline-none focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={() => setDueDate('')}
-                disabled={dueDate === ''}
-                className="rounded-md bg-soft px-3 text-sub hover:bg-hover disabled:opacity-40"
-              >
-                クリア
-              </button>
-            </div>
+            </p>
+            <DueDatePicker labelId="card-edit-due-date-label" value={dueDate} onChange={setDueDate} />
           </div>
 
           {/* ラベル：「なし」と5色から1つ。色にマウスを乗せると名前を表示する */}
           <fieldset>
-            <legend className="mb-1 font-bold text-sub">ラベル</legend>
-            <div className="flex items-center gap-2">
+            <legend className={FIELD_LABEL}>ラベル</legend>
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => setLabelId(null)}
                 aria-pressed={labelId === null}
-                className={`rounded-full border border-input-line px-2.5 py-0.5 text-sub ${labelId === null ? SELECTED : ''}`}
+                className={`h-8 cursor-pointer rounded-full border border-input-line px-3 text-xs text-sub outline-none hover:bg-soft focus-visible:ring-3 focus-visible:ring-ring/50 ${labelId === null ? SELECTED : ''}`}
               >
                 なし
               </button>
@@ -200,45 +177,44 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
                   aria-pressed={labelId === label.id}
                   aria-label={`ラベル：${label.name}`}
                   title={label.name}
-                  className={`h-7 w-7 rounded-full border border-sub/40 ${labelId === label.id ? SELECTED : ''}`}
+                  className={`flex size-8 cursor-pointer items-center justify-center rounded-full border border-sub/40 text-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${labelId === label.id ? SELECTED : ''}`}
                   style={{ backgroundColor: label.colorCode }}
-                />
+                >
+                  {labelId === label.id && <Check className="size-4" aria-hidden="true" />}
+                </button>
               ))}
             </div>
           </fieldset>
         </div>
 
         {/* 左に「削除」、右に「保存」（押し間違えないよう離して置く） */}
-        <div className="flex justify-between border-t border-line px-4 py-3">
-          <button
+        <DialogFooter className="justify-between sm:justify-between">
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setIsConfirmingDelete(true)}
             disabled={isSaving}
-            className="rounded-md px-3 py-1.5 text-sm font-bold text-danger-dark hover:bg-danger-soft disabled:opacity-50"
+            className="text-danger-dark hover:bg-danger-soft hover:text-danger-dark"
           >
+            <Trash2 aria-hidden="true" />
             削除
-          </button>
-          <button
-            type="button"
-            onClick={() => void save()}
-            disabled={isSaving}
-            className="rounded-md bg-primary px-4 py-1.5 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-50"
-          >
+          </Button>
+          <Button type="button" onClick={() => void save()} disabled={isSaving} className="px-5">
             {isSaving ? '保存中…' : '保存'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </DialogFooter>
 
-      {isConfirmingDelete && (
-        // M-01：削除の確認メッセージ（SC-03）
-        <ConfirmDialog
-          message={`カード「${card.title}」を削除します。よろしいですか？`}
-          confirmLabel="削除"
-          onConfirm={() => void remove()}
-          onCancel={cancelDelete}
-        />
-      )}
-    </div>
+        {isConfirmingDelete && (
+          // M-01：削除の確認メッセージ（SC-03）
+          <ConfirmDialog
+            message={`カード「${card.title}」を削除します。よろしいですか？`}
+            confirmLabel="削除"
+            onConfirm={() => void remove()}
+            onCancel={cancelDelete}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 

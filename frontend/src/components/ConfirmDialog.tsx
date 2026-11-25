@@ -1,4 +1,16 @@
-import { useEffect } from 'react'
+import { Trash2 } from 'lucide-react'
+import { useRef } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { isImeEscape } from '../utils/ime'
 
 type ConfirmDialogProps = {
   /** 確認のメッセージ（M-01〜M-03） */
@@ -12,56 +24,39 @@ type ConfirmDialogProps = {
 }
 
 /**
- * 確認メッセージ（SC-03）。ほかの画面の上に重ねて表示する。
+ * 確認メッセージ（SC-03）。ほかの画面の上に重ねて表示する。背景を押しても閉じない。
  * ブラウザ標準の確認画面（window.confirm）は、ブラウザによっては出ないことがあるため、アプリの中に作る。
+ * 編集画面の上に出したときの Esc は、この画面だけを閉じる（うしろの編集画面は閉じない）。
  */
 function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: ConfirmDialogProps) {
-  // Esc キーで「キャンセル」にする（日本語入力の変換中の Esc は無視する）
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.isComposing || event.keyCode === 229) return
-      if (event.key === 'Escape') {
-        // うしろの編集画面まで閉じないように、ここで止める
-        event.stopImmediatePropagation()
-        onCancel()
-      }
-    }
-    // 編集画面の Esc より先に受け取るため、capture（先に受け取る設定）で登録する
-    window.addEventListener('keydown', handleKeyDown, true)
-    return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [onCancel])
+  const cancelRef = useRef<HTMLButtonElement>(null)
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-4">
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-describedby="confirm-message"
-        className="w-full max-w-xs rounded-xl bg-white p-4 shadow-xl"
-      >
-        <p id="confirm-message" className="text-sm break-all">
-          {message}
-        </p>
-        <div className="mt-4 flex justify-end gap-2">
-          {/* 間違えて削除しないよう、最初は「キャンセル」を選んだ状態にする */}
-          <button
-            type="button"
-            onClick={onCancel}
-            autoFocus
-            className="rounded-md bg-soft px-3 py-1.5 text-sm text-sub hover:bg-hover"
-          >
-            キャンセル
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-md bg-danger px-3 py-1.5 text-sm font-bold text-white hover:bg-danger-dark"
-          >
+    <AlertDialog
+      open
+      onOpenChange={(open, details) => {
+        if (open) return
+        // 日本語入力の変換中の Esc は、変換の取り消しなので無視する
+        if (isImeEscape(details.event)) details.cancel()
+        else onCancel()
+      }}
+    >
+      {/* 間違えて削除しないよう、最初は「キャンセル」を選んだ状態にする */}
+      <AlertDialogContent initialFocus={cancelRef}>
+        <AlertDialogHeader>
+          <AlertDialogMedia className="rounded-full bg-danger-soft text-danger-dark *:[svg]:size-5!">
+            <Trash2 aria-hidden="true" />
+          </AlertDialogMedia>
+          <AlertDialogTitle className="text-sm leading-6 break-all">{message}</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel ref={cancelRef}>キャンセル</AlertDialogCancel>
+          <AlertDialogAction type="button" variant="destructive" onClick={onConfirm}>
             {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 

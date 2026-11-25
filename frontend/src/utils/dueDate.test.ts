@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { formatDueDate, getDueStatus } from './dueDate'
+import { formatDueDate, getDueStatus, toDateString, toLocalDate } from './dueDate'
 
 // 「今日」を 2026-11-10 の夜（日付がずれやすい時間）に決めて確かめる
 const today = new Date(2026, 10, 10, 23, 30)
@@ -36,5 +36,21 @@ describe('formatDueDate：期限の表示', () => {
   test('今年以外なら「年/月/日」', () => {
     expect(formatDueDate('2027-01-10', today)).toBe('2027/1/10')
     expect(formatDueDate('2025-12-31', today)).toBe('2025/12/31')
+  })
+})
+
+describe('toLocalDate・toDateString：文字と Date の変換', () => {
+  test('文字から Date にして戻しても、日付がずれない', () => {
+    for (const date of ['2026-01-01', '2026-11-10', '2026-12-31', '2028-02-29']) {
+      expect(toDateString(toLocalDate(date))).toBe(date)
+    }
+  })
+
+  test('夜遅い時刻でも、パソコンの日付になる', () => {
+    expect(toDateString(today)).toBe('2026-11-10')
+  })
+
+  test('月と日が1けたのときは、0 を付ける', () => {
+    expect(toDateString(new Date(2026, 0, 5))).toBe('2026-01-05')
   })
 })
