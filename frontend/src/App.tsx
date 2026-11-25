@@ -336,7 +336,7 @@ function App() {
       {status === 'error' && <ErrorBanner message={CONNECTION_ERROR} />}
       {status === 'ready' && notice && (
         // 編集画面のうしろの暗い幕より手前に出す
-        <div className="relative z-20">
+        <div className="relative z-60">
           <ErrorBanner message={notice} />
         </div>
       )}
