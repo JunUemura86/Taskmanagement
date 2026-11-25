@@ -66,7 +66,7 @@ function AddItemForm({ buttonLabel, inputLabel, placeholder, maxLength, emptyErr
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full rounded-md px-2 py-1.5 text-left text-sm text-[#44546f] hover:bg-[#dcdfe4]"
+        className="w-full rounded-md px-2 py-1.5 text-left text-sm text-ink hover:bg-hover"
       >
         {buttonLabel}
       </button>
@@ -94,9 +94,9 @@ function AddItemForm({ buttonLabel, inputLabel, placeholder, maxLength, emptyErr
         // disabled にすると入力欄から離れてしまうので、readOnly で書き換えだけを止める
         readOnly={isSending}
         autoFocus
-        className="w-full rounded-md border border-[#0c66e4] bg-white px-2 py-1.5 text-sm outline-none"
+        className="w-full rounded-md border border-primary bg-white px-2 py-1.5 text-sm outline-none placeholder:text-sub"
       />
-      {error && <p className="mt-1 px-1 text-xs text-[#ae2e24]">{error}</p>}
+      {error && <p className="mt-1 px-1 text-xs text-danger-dark">{error}</p>}
     </div>
   )
 }

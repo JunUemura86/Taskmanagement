@@ -235,7 +235,7 @@ function Board({
       onDragCancel={resetDrag}
       accessibility={{ screenReaderInstructions: SCREEN_READER_INSTRUCTIONS, announcements: ANNOUNCEMENTS }}
     >
-      <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-3 overflow-x-auto p-4">
+      <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-5 overflow-x-auto p-5">
         {/* 横に並んだリストとして、並べ替えられるようにする */}
         <SortableContext items={shownLists.map((list) => listSortDndId(list.id))} strategy={horizontalListSortingStrategy}>
           {shownLists.map((list) => (
@@ -256,7 +256,7 @@ function Board({
             />
           ))}
         </SortableContext>
-        <div className="w-68 shrink-0 rounded-lg bg-[#f1f2f4]/70 p-2">
+        <div className="w-72 shrink-0 rounded-xl border-2 border-dashed border-input-line bg-white/50 p-2">
           <AddItemForm
             buttonLabel="＋リストを追加"
             inputLabel="リスト名"
@@ -271,7 +271,7 @@ function Board({
       {/* ドラッグ中に、マウスについてくるカード */}
       <DragOverlay>
         {draggingCard && (
-          <div className="w-64 rotate-2 cursor-grabbing shadow-lg">
+          <div className="w-full rotate-2 cursor-grabbing rounded-lg shadow-lg">
             <CardView
               card={draggingCard}
               label={draggingCard.labelId === null ? undefined : labelsById.get(draggingCard.labelId)}
@@ -283,11 +283,11 @@ function Board({
         )}
         {/* ドラッグ中に、マウスについてくるリスト（リスト名と、中のカードを見せるだけ。押せない） */}
         {draggingList && (
-          <div className="max-h-[80vh] w-68 rotate-2 cursor-grabbing overflow-hidden rounded-lg bg-[#f1f2f4] p-2 shadow-lg">
-            <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
-              <span className="px-0.5 text-[#626f86]">⠿</span>
+          <div className="max-h-[80vh] w-full rotate-2 cursor-grabbing overflow-hidden rounded-xl border border-list-line bg-list p-3 shadow-lg">
+            <h2 className="-mx-3 mb-3 flex items-center gap-1.5 border-b border-line px-3 pt-1 pb-3 font-bold">
+              <span className="px-0.5 text-sub">⠿</span>
               <span className="truncate">{draggingList.name}</span>
-              {draggingList.isDone && <span className="text-[#1f845a]">✓</span>}
+              {draggingList.isDone && <span className="text-done">✓</span>}
             </h2>
             <ul className="flex flex-col gap-2">
               {draggingList.cards.map((card) => (

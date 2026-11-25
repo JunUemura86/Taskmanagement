@@ -9,12 +9,12 @@ export type PriorityStyle = {
 }
 
 const PRIORITIES: Record<Priority, PriorityStyle> = {
-  // 高：濃い赤の背景に白い文字（いちばん目立たせる）
-  1: { text: '↑ 高', className: 'border-transparent bg-[#c9372c] text-white' },
+  // 高：落ち着いた赤の背景に白い文字（いちばん目立たせる）
+  1: { text: '↑ 高', className: 'border-transparent bg-danger text-white' },
   // 中：薄いオレンジの背景にオレンジの文字
-  2: { text: '→ 中', className: 'border-[#f5b973] bg-[#fff3e0] text-[#a54800]' },
-  // 低：薄いグレーの背景にグレーの文字
-  3: { text: '↓ 低', className: 'border-[#c1c7d0] bg-[#f1f2f4] text-[#626f86]' },
+  2: { text: '→ 中', className: 'border-mid-line bg-mid-soft text-mid' },
+  // 低：薄いラベンダーの背景に灰紫の文字
+  3: { text: '↓ 低', className: 'border-list-line bg-soft text-sub' },
 }
 
 /**

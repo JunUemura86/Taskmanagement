@@ -48,12 +48,12 @@ function ListMenu({ listName, items }: ListMenuProps) {
         aria-label={`リスト「${listName}」のメニュー`}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="rounded px-2 leading-6 text-[#44546f] hover:bg-[#dcdfe4]"
+        className="rounded px-2 leading-6 text-sub hover:bg-hover"
       >
         …
       </button>
       {isOpen && (
-        <ul role="menu" className="absolute right-0 z-20 mt-1 w-44 rounded-md bg-white py-1 text-sm font-normal shadow-lg">
+        <ul role="menu" className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-line bg-white py-1 text-sm font-normal shadow-lg">
           {items.map((item) => (
             <li key={item.label} role="none">
               <button
@@ -63,7 +63,7 @@ function ListMenu({ listName, items }: ListMenuProps) {
                   setIsOpen(false)
                   item.onSelect()
                 }}
-                className={`w-full px-3 py-1.5 text-left hover:bg-[#f1f2f4] ${item.isDanger ? 'text-[#ae2e24]' : 'text-[#172b4d]'}`}
+                className={`w-full px-3 py-1.5 text-left hover:bg-soft ${item.isDanger ? 'text-danger-dark' : 'text-ink'}`}
               >
                 {item.label}
               </button>

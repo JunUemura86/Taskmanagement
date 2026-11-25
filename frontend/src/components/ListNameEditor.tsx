@@ -57,7 +57,7 @@ function ListNameEditor({ name, onRename }: ListNameEditorProps) {
         type="button"
         onClick={startEditing}
         title="クリックしてリスト名を変更"
-        className="min-w-0 flex-1 cursor-text rounded px-1 text-left break-all hover:bg-[#dcdfe4]"
+        className="min-w-0 flex-1 cursor-text rounded px-1 text-left break-all hover:bg-hover"
       >
         {name}
       </button>
@@ -76,7 +76,7 @@ function ListNameEditor({ name, onRename }: ListNameEditorProps) {
       maxLength={30}
       aria-label="リスト名"
       autoFocus
-      className="min-w-0 flex-1 rounded border border-[#0c66e4] bg-white px-1 font-bold outline-none"
+      className="min-w-0 flex-1 rounded border border-primary bg-white px-1 font-bold outline-none"
     />
   )
 }

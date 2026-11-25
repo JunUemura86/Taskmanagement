@@ -11,13 +11,13 @@ type HeaderProps = {
  */
 function Header({ selectedCount, onDeleteSelected }: HeaderProps) {
   return (
-    <header className="flex h-14 items-center justify-between bg-white px-4 shadow-sm">
-      <h1 className="text-lg font-bold">タスク管理</h1>
+    <header className="flex h-14 items-center justify-between border-b border-line bg-white px-5 shadow-sm">
+      <h1 className="text-lg font-bold text-primary-dark">タスク管理</h1>
       <button
         type="button"
         onClick={onDeleteSelected}
         disabled={selectedCount === 0}
-        className="rounded-md bg-[#c9372c] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#ae2e24] disabled:cursor-not-allowed disabled:bg-[#dcdfe4] disabled:text-[#8590a2]"
+        className="rounded-md bg-danger px-3 py-1.5 text-sm font-bold text-white hover:bg-danger-dark disabled:cursor-not-allowed disabled:bg-hover disabled:text-sub"
       >
         選択したカードを削除（{selectedCount}件）
       </button>

@@ -49,7 +49,7 @@ function CardItem({ card, label, isDoneList, onOpen, isSelected, onToggleSelect 
         }
       }}
       aria-label={`カード「${card.title}」を編集`}
-      className={`cursor-pointer touch-none rounded-md outline-none hover:ring-2 hover:ring-[#8590a2]/40 focus-visible:ring-2 focus-visible:ring-[#0c66e4] ${isDragging ? 'opacity-40' : ''}`}
+      className={`cursor-pointer touch-none rounded-lg outline-none hover:shadow-md hover:ring-2 hover:ring-primary/40 focus-visible:ring-2 focus-visible:ring-primary ${isDragging ? 'opacity-40' : ''}`}
     >
       <CardView
         card={card}
