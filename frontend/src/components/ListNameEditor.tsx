@@ -1,4 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
+import { Input } from '@/components/ui/input'
 
 type ListNameEditorProps = {
   /** 今のリスト名 */
@@ -57,7 +58,7 @@ function ListNameEditor({ name, onRename }: ListNameEditorProps) {
         type="button"
         onClick={startEditing}
         title="クリックしてリスト名を変更"
-        className="min-w-0 flex-1 cursor-text rounded px-1 text-left break-all hover:bg-hover"
+        className="min-w-0 cursor-text rounded-sm px-1 text-left break-all hover:bg-hover"
       >
         {name}
       </button>
@@ -65,7 +66,7 @@ function ListNameEditor({ name, onRename }: ListNameEditorProps) {
   }
 
   return (
-    <input
+    <Input
       type="text"
       value={text}
       onChange={(event) => setText(event.target.value)}
@@ -76,7 +77,7 @@ function ListNameEditor({ name, onRename }: ListNameEditorProps) {
       maxLength={30}
       aria-label="リスト名"
       autoFocus
-      className="min-w-0 flex-1 rounded border border-primary bg-white px-1 font-bold outline-none"
+      className="h-7 flex-1 px-1.5 font-semibold"
     />
   )
 }

@@ -12,9 +12,9 @@ const PRIORITIES: Record<Priority, PriorityStyle> = {
   // 高：落ち着いた赤の背景に白い文字（いちばん目立たせる）
   1: { text: '↑ 高', className: 'border-transparent bg-danger text-white' },
   // 中：薄いオレンジの背景にオレンジの文字
-  2: { text: '→ 中', className: 'border-mid-line bg-mid-soft text-mid' },
+  2: { text: '→ 中', className: 'border-transparent bg-mid-soft text-mid' },
   // 低：薄いラベンダーの背景に灰紫の文字
-  3: { text: '↓ 低', className: 'border-list-line bg-soft text-sub' },
+  3: { text: '↓ 低', className: 'border-transparent bg-soft text-sub' },
 }
 
 /**

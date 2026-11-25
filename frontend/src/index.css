@@ -42,7 +42,6 @@
   --color-warn-soft: #fbf1c9; /* 期限が近い（背景） */
   --color-mid: #8a4b12; /* 優先度「中」（文字） */
   --color-mid-soft: #fdf3e7; /* 優先度「中」（背景） */
-  --color-mid-line: #f0c79a; /* 優先度「中」（枠線） */
   --color-done: #2b7054; /* 完了用リストの ✓ */
 
   /* shadcn/ui の部品が使う名前。上の色に結び付ける */
@@ -78,5 +77,35 @@
   /* スクロールの端でも、ボードと同じ背景にする */
   body {
     @apply bg-board text-ink antialiased;
+  }
+}
+
+/*
+ * チェックボックスの見た目（Checkbox で使う）。
+ * カードは最大1,000枚表示するため、アイコンの部品を足さず、背景の画像で印を描く。
+ */
+@utility checkbox {
+  appearance: none;
+  border: 1.5px solid var(--color-input-line);
+  border-radius: 0.25rem;
+  background: #ffffff center / 100% no-repeat;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+  }
+  &:checked,
+  &:indeterminate {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+  }
+  &:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3.5 8.3 3 3 6-6.4'/%3E%3C/svg%3E");
+  }
+  &:indeterminate {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M4 8h8'/%3E%3C/svg%3E");
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }

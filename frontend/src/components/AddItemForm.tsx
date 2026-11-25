@@ -1,7 +1,10 @@
+import { Plus } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type AddItemFormProps = {
-  /** 閉じているときのボタンの文字（例：「＋カードを追加」） */
+  /** 閉じているときのボタンの文字（例：「カードを追加」。左に＋のアイコンが付く） */
   buttonLabel: string
   /** 入力欄の説明（読み上げ用。例：「カードのタイトル」） */
   inputLabel: string
@@ -16,7 +19,7 @@ type AddItemFormProps = {
 }
 
 /**
- * 「＋〇〇を追加」のボタン。押すと入力欄になり、Enter で追加・Esc でやめる。
+ * 「＋ 〇〇を追加」のボタン。押すと入力欄になり、Enter で追加・Esc でやめる。
  * カードの追加（リストの一番下）とリストの追加（ボードの一番右）で使う。
  */
 function AddItemForm({ buttonLabel, inputLabel, placeholder, maxLength, emptyError, onAdd }: AddItemFormProps) {
@@ -63,19 +66,21 @@ function AddItemForm({ buttonLabel, inputLabel, placeholder, maxLength, emptyErr
 
   if (!isOpen) {
     return (
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setIsOpen(true)}
-        className="w-full rounded-md px-2 py-1.5 text-left text-sm text-ink hover:bg-hover"
+        className="w-full justify-start px-2 text-sub hover:bg-hover hover:text-ink"
       >
+        <Plus aria-hidden="true" />
         {buttonLabel}
-      </button>
+      </Button>
     )
   }
 
   return (
     <div>
-      <input
+      <Input
         type="text"
         value={text}
         onChange={(event) => {
@@ -94,7 +99,6 @@ function AddItemForm({ buttonLabel, inputLabel, placeholder, maxLength, emptyErr
         // disabled にすると入力欄から離れてしまうので、readOnly で書き換えだけを止める
         readOnly={isSending}
         autoFocus
-        className="w-full rounded-md border border-primary bg-white px-2 py-1.5 text-sm outline-none placeholder:text-sub"
       />
       {error && <p className="mt-1 px-1 text-xs text-danger-dark">{error}</p>}
     </div>

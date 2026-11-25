@@ -10,6 +10,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable'
+import { GripVertical } from 'lucide-react'
 import { useState } from 'react'
 import type { Card, Label, List } from '../types'
 import type { SortKey } from '../utils/sortCards'
@@ -18,6 +19,7 @@ import AddItemForm from './AddItemForm'
 import CardView from './CardView'
 import Checkbox from './Checkbox'
 import { boardCollision, type DndData, listOfDropTarget, listSortDndId } from './dnd'
+import ListBadges from './ListBadges'
 import ListColumn from './ListColumn'
 
 // M-04：リスト名が空のとき
@@ -88,10 +90,10 @@ function sortListIdOf(data: unknown): number | null {
 }
 
 /**
- * ボード。リストを左から横に並べ、一番右に「＋リストを追加」を置く（多いときは横にスクロールする）。
+ * ボード。リストを左から横に並べ、一番右に「＋ リストを追加」を置く（多いときは横にスクロールする）。
  * カードをドラッグ＆ドロップで、別のリストや別の位置へ動かせる。
  * ドラッグ中は、まわりのカードがずれて、カードが入る場所が空く。
- * リストも、見出しのつまみ（⠿）をドラッグして左右の順番を変えられる。ドラッグ中は、まわりのリストが左右にずれる。
+ * リストも、見出しのつまみをドラッグして左右の順番を変えられる。ドラッグ中は、まわりのリストが左右にずれる。
  */
 function Board({
   lists,
@@ -235,7 +237,7 @@ function Board({
       onDragCancel={resetDrag}
       accessibility={{ screenReaderInstructions: SCREEN_READER_INSTRUCTIONS, announcements: ANNOUNCEMENTS }}
     >
-      <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-5 overflow-x-auto p-5">
+      <main className="flex min-h-[calc(100vh-3.5rem)] items-start gap-4 overflow-x-auto p-6">
         {/* 横に並んだリストとして、並べ替えられるようにする */}
         <SortableContext items={shownLists.map((list) => listSortDndId(list.id))} strategy={horizontalListSortingStrategy}>
           {shownLists.map((list) => (
@@ -256,9 +258,9 @@ function Board({
             />
           ))}
         </SortableContext>
-        <div className="w-72 shrink-0 rounded-xl border-2 border-dashed border-input-line bg-white/50 p-2">
+        <div className="w-72 shrink-0 rounded-xl border border-dashed border-input-line p-2">
           <AddItemForm
-            buttonLabel="＋リストを追加"
+            buttonLabel="リストを追加"
             inputLabel="リスト名"
             placeholder="リスト名を入力して Enter"
             maxLength={30}
@@ -284,10 +286,10 @@ function Board({
         {/* ドラッグ中に、マウスについてくるリスト（リスト名と、中のカードを見せるだけ。押せない） */}
         {draggingList && (
           <div className="max-h-[80vh] w-full rotate-2 cursor-grabbing overflow-hidden rounded-xl border border-list-line bg-list p-3 shadow-lg">
-            <h2 className="-mx-3 mb-3 flex items-center gap-1.5 border-b border-line px-3 pt-1 pb-3 font-bold">
-              <span className="px-0.5 text-sub">⠿</span>
+            <h2 className="-mx-3 mb-3 flex h-10 items-center gap-1.5 border-b border-list-line px-3 pb-3 text-sm font-semibold">
+              <GripVertical className="-ml-1 size-4 shrink-0 text-sub" aria-hidden="true" />
               <span className="truncate">{draggingList.name}</span>
-              {draggingList.isDone && <span className="text-done">✓</span>}
+              <ListBadges list={draggingList} />
             </h2>
             <ul className="flex flex-col gap-2">
               {draggingList.cards.map((card) => (
