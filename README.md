@@ -45,6 +45,10 @@
 | スタイリング | Tailwind CSS | 4.3.5 |
 | Vite と Tailwind をつなぐ | @tailwindcss/vite | 4.3.5 |
 | ドラッグ＆ドロップ | @dnd-kit/core / @dnd-kit/sortable / @dnd-kit/utilities | 6.3.1 / 10.0.0 / 3.2.2 |
+| デザインの部品 | shadcn/ui（@base-ui/react） | 1.9.0 |
+| アイコン | lucide-react | 1.71.0 |
+| カレンダー | react-day-picker | 10.0.2 |
+| 文字 | @fontsource-variable/inter / @fontsource-variable/noto-sans-jp | 5.3.0 / 5.3.1 |
 | テスト | Vitest | 5.1.0 |
 | 書き方のチェック（Lint） | oxlint | 1.92.0 |
 
@@ -283,6 +287,8 @@ Taskmanagement/
 │   ├── vite.config.ts                Vite の設定（ポート 5173 に固定）
 │   └── src/
 │       ├── components/               画面の部品（ボード・リスト・カード・ダイアログなど）
+│       │   └── ui/                   shadcn/ui から取り込んだ部品（ボタンなど）
+│       ├── lib/                      shadcn/ui の部品が使う共通の処理
 │       ├── utils/                    計算の処理とそのテスト（期限・優先度・並べ替えなど）
 │       ├── api.ts                    サーバーの API を呼ぶ処理
 │       └── types.ts                  データの型

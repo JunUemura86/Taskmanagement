@@ -13,6 +13,9 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
 
+    // 「@/」で src フォルダを指せるようにする（vite.config.ts の tsconfigPaths で、Vite でも使う）
+    "paths": { "@/*": ["./src/*"] },
+
     // 型のチェックを厳しくする
     "strict": true,
     "noUnusedLocals": true,

@@ -7,7 +7,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書名 | タスク管理アプリ 技術スタック |
-| 版 | 2.7 |
+| 版 | 2.8 |
 | 作成日 | 2026-11-03 |
 
 ## 改訂履歴
@@ -23,6 +23,7 @@
 | 2.5 | 2026-11-11 | 実際の構成に合わせた：ビルドの道具を Maven から Gradle（Wrapper 9.8.2）に変更、各ライブラリの版と oxlint・PostgreSQL 18 を追記、起動方法を今動く手順（start.sh はまだない）に変更 |
 | 2.6 | 2026-11-11 | oxlint で見るルールを追記（React・TypeScript・アクセシビリティ・import・テストの書き方。警告も残さない） |
 | 2.7 | 2026-11-11 | バックエンドの書き方のチェック（Checkstyle 14.3.0、Java のコンパイルの警告をエラーにする設定）を追記 |
+| 2.8 | 2026-11-25 | 画面のデザインのため、shadcn/ui・Base UI・Lucide・react-day-picker・文字（Inter、Noto Sans JP）などを追加 |
 
 ---
 
@@ -63,6 +64,12 @@
 | 開発の道具 | TypeScript | 7.0.2 | 型のチェックをする（`npm run typecheck`）。ブラウザ用のファイルへの変換は Vite が行う |
 | 部品 | @tailwindcss/vite | 4.3.5 | Vite と Tailwind CSS をつなぐ |
 | 部品 | dnd-kit（@dnd-kit/core・@dnd-kit/sortable・@dnd-kit/utilities） | 6.3.1・10.0.0・3.2.2 | リストやカードのドラッグ＆ドロップを作る。core が土台、sortable がドラッグ中にまわりのカードやリストをずらす並べ替え、utilities がずらす量の計算 |
+| 部品 | shadcn/ui（取り込みに使った CLI は 4.23.0） | ― | ボタン・お知らせ欄などの部品。ソースを `frontend/src/components/ui` に取り込み、このアプリに合わせて直して使う（MIT ライセンス） |
+| 部品 | @base-ui/react | 1.9.0 | shadcn/ui の部品の土台。キーボード操作や読み上げへの対応 |
+| 部品 | lucide-react | 1.71.0 | アイコン（ISC ライセンス） |
+| 部品 | react-day-picker | 10.0.2 | カレンダー（編集画面の作り直しで使う） |
+| 部品 | class-variance-authority・clsx・tailwind-merge・tw-animate-css | 0.7.1・2.1.1・3.7.0・1.4.0 | shadcn/ui の部品の、クラス名の整理と動き |
+| 部品 | @fontsource-variable/inter・@fontsource-variable/noto-sans-jp | 5.3.0・5.3.1 | 文字（Inter・Noto Sans JP。OFL ライセンス）。外部のサイトから読み込まず、アプリに入れる |
 | テストの道具 | Vitest | 5.1.0 | 画面のプログラムが正しく動くかを確かめる（`npm test`） |
 | 書き方のチェック | oxlint | 1.92.0 | プログラムの書き方のまちがいを見つける（`npm run lint`）。React（フックの使い方・useEffect の依存の書き忘れ）・TypeScript・アクセシビリティ（読み上げ・キーボード操作）・import・テストの書き方のルールを見る。まちがいの可能性が高いものはエラー、怪しいものは警告で、警告が1つでもあれば失敗にする。設定は `frontend/.oxlintrc.json` |
 
