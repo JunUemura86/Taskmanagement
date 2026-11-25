@@ -1,7 +1,9 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { ArrowUpDown, CircleCheck, CircleMinus, GripVertical, Trash2 } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Label, List } from '../types'
 import { listSelectionState } from '../utils/selection'
 import { SORT_OPTIONS, type SortKey } from '../utils/sortCards'
@@ -9,9 +11,13 @@ import AddItemForm from './AddItemForm'
 import CardItem from './CardItem'
 import Checkbox from './Checkbox'
 import ConfirmDialog from './ConfirmDialog'
+import ListBadges from './ListBadges'
 import ListMenu from './ListMenu'
 import ListNameEditor from './ListNameEditor'
 import { cardDndId, type DndData, listDndId, listSortDndId } from './dnd'
+
+// 並べ替えのプルダウンの選択肢（値と、表示する文字）
+const SORT_ITEMS = SORT_OPTIONS.map((option) => ({ value: option.key, label: option.text }))
 
 // M-05：カードのタイトルが空のとき
 const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
@@ -43,10 +49,10 @@ type ListColumnProps = {
 }
 
 /**
- * リスト1つ。見出し（リスト名・完了用なら ✓）と、中のカードと、「＋カードを追加」を表示する。
+ * リスト1つ。見出し（リスト名・完了用なら ✓・カードの枚数）と、中のカードと、「＋カードを追加」を表示する。
  * 中のカードは、ドラッグ＆ドロップで並べ替えられる（SortableContext）。
  * リスト全体も、カードを置ける場所になる（カードのないリストや、カードの下の何もないところに置けるようにするため）。
- * 見出しの左端のつまみ（⠿）を押したまま動かすと、リストの左右の順番を変えられる（UC-13）。
+ * 見出しの左端のつまみを押したまま動かすと、リストの左右の順番を変えられる（UC-13）。
  * ほかのリストをドラッグしているときは、入る場所を空けるために、なめらかに左右にずれる（useSortable）。
  * ドラッグ中のリスト自身は、入る予定の場所に薄く表示する（マウスについてくるリストは Board の DragOverlay が表示する）。
  */
@@ -96,9 +102,9 @@ function ListColumn({
       ref={setSectionRef}
       // ずれる動き（左右に動かす量と、動くときのなめらかさ）
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`w-72 shrink-0 rounded-xl border border-list-line bg-list p-3 shadow-md ${isDragging ? 'opacity-40' : ''}`}
+      className={`w-72 shrink-0 rounded-xl border border-list-line bg-list p-3 shadow-xs ${isDragging ? 'opacity-40' : ''}`}
     >
-      <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
+      <h2 className="flex items-center gap-1.5 text-sm font-semibold">
         {/* つまみ：押したまま左右に動かすと、リストの順番を変えられる */}
         <button
           type="button"
@@ -106,9 +112,9 @@ function ListColumn({
           {...listeners}
           aria-label={`リスト「${list.name}」を動かす`}
           title="ドラッグしてリストを動かす"
-          className="shrink-0 cursor-grab touch-none rounded px-0.5 text-sub hover:bg-hover active:cursor-grabbing"
+          className="-ml-1 flex h-7 w-5 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-sub hover:bg-hover active:cursor-grabbing"
         >
-          ⠿
+          <GripVertical className="size-4" aria-hidden="true" />
         </button>
         {/* 「すべて選択」：一部だけ選んでいるときは「－」の表示。カードがないときは押せない */}
         <Checkbox
@@ -118,43 +124,48 @@ function ListColumn({
           label={`リスト「${list.name}」のカードをすべて選択`}
           onToggle={() => onToggleList(list.id)}
         />
-        {/* リスト名：クリックすると変更できる */}
-        <ListNameEditor name={list.name} onRename={(name) => onRenameList(list.id, name)} />
-        {list.isDone && (
-          <span className="shrink-0 pr-1 text-done" title="完了用リスト">
-            ✓
-          </span>
-        )}
+        {/* リスト名（クリックすると変更できる）・完了用の ✓・カードの枚数 */}
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <ListNameEditor name={list.name} onRename={(name) => onRenameList(list.id, name)} />
+          <ListBadges list={list} />
+        </div>
         {/* 「…」メニュー。押し間違いを防ぐため、リストの削除はこの中に置く */}
         <ListMenu
           listName={list.name}
           items={[
             list.isDone
-              ? { label: '完了用リストを解除', onSelect: () => onSetDone(list.id, false) }
-              : { label: '完了用リストにする', onSelect: () => onSetDone(list.id, true) },
-            { label: 'リストを削除', onSelect: () => setIsConfirmingDelete(true), isDanger: true },
+              ? { label: '完了用リストを解除', icon: CircleMinus, onSelect: () => onSetDone(list.id, false) }
+              : { label: '完了用リストにする', icon: CircleCheck, onSelect: () => onSetDone(list.id, true) },
+            { label: 'リストを削除', icon: Trash2, onSelect: () => setIsConfirmingDelete(true), isDanger: true },
           ]}
         />
       </h2>
       {/* 並べ替えのプルダウン（UC-12）。カードが1枚以下のときは押せない。下の線で、見出しとカードの並びを分ける */}
-      <div className="-mx-3 mb-3 border-b border-line px-3 pb-3">
-        <select
-          value={sortKey ?? ''}
-          onChange={(event) => onSort(list.id, event.target.value as SortKey)}
+      <div className="-mx-3 mb-3 border-b border-list-line px-3 pt-1 pb-2">
+        <Select
+          items={SORT_ITEMS}
+          value={sortKey}
+          onValueChange={(key) => {
+            if (key !== null) onSort(list.id, key)
+          }}
           disabled={list.cards.length <= 1}
-          aria-label={`リスト「${list.name}」のカードを並べ替える`}
-          className="w-full cursor-pointer rounded-md border border-input-line bg-white px-2 py-1 text-sm text-sub disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {/* 最初に表示するだけの項目（選べない） */}
-          <option value="" disabled hidden>
-            並べ替え…
-          </option>
-          {SORT_OPTIONS.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.text}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger
+            size="sm"
+            aria-label={`リスト「${list.name}」のカードを並べ替える`}
+            className="w-full cursor-pointer border-transparent px-1.5 text-xs text-sub hover:bg-hover"
+          >
+            <ArrowUpDown className="size-3.5" aria-hidden="true" />
+            <SelectValue placeholder="並べ替え…" />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            {SORT_ITEMS.map((item) => (
+              <SelectItem key={item.value} value={item.value} className="cursor-pointer py-1.5 pl-2">
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {/* 縦に並んだカードとして、並べ替えられるようにする */}
       <SortableContext items={list.cards.map((card) => cardDndId(card.id))} strategy={verticalListSortingStrategy}>
@@ -173,9 +184,14 @@ function ListColumn({
           ))}
         </ul>
       </SortableContext>
+      {list.cards.length === 0 && (
+        <p className="rounded-lg border border-dashed border-list-line py-6 text-center text-xs text-sub">
+          カードはまだありません
+        </p>
+      )}
       <div className="mt-2">
         <AddItemForm
-          buttonLabel="＋カードを追加"
+          buttonLabel="カードを追加"
           inputLabel="カードのタイトル"
           placeholder="タイトルを入力して Enter"
           maxLength={100}

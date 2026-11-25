@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { type LucideIcon, MoreHorizontal } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 /** メニューの項目1つ */
 export type ListMenuItem = {
   label: string
+  icon: LucideIcon
   onSelect: () => void
   /** 削除など、気をつけて押す項目なら true（赤い文字にする） */
   isDanger?: boolean
@@ -19,59 +22,35 @@ type ListMenuProps = {
  * 押し間違いを防ぐため、リストの削除はこのメニューの中に置く（画面設計書 SC-01）。
  */
 function ListMenu({ listName, items }: ListMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  // 開いている間は、メニューの外を押したとき・Esc を押したときに閉じる
-  useEffect(() => {
-    if (!isOpen) return
-    function handlePointerDown(event: PointerEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) setIsOpen(false)
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.isComposing || event.keyCode === 229) return
-      if (event.key === 'Escape') setIsOpen(false)
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isOpen])
-
   return (
-    <div ref={containerRef} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => setIsOpen((open) => !open)}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-sub hover:bg-hover hover:text-ink aria-expanded:bg-hover"
+          />
+        }
         aria-label={`リスト「${listName}」のメニュー`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        className="rounded px-2 leading-6 text-sub hover:bg-hover"
       >
-        …
-      </button>
-      {isOpen && (
-        <ul role="menu" className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-line bg-white py-1 text-sm font-normal shadow-lg">
-          {items.map((item) => (
-            <li key={item.label} role="none">
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setIsOpen(false)
-                  item.onSelect()
-                }}
-                className={`w-full px-3 py-1.5 text-left hover:bg-soft ${item.isDanger ? 'text-danger-dark' : 'text-ink'}`}
-              >
-                {item.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+        <MoreHorizontal aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {items.map((item) => (
+          <DropdownMenuItem
+            key={item.label}
+            variant={item.isDanger ? 'destructive' : 'default'}
+            onClick={item.onSelect}
+            className="cursor-pointer gap-2 px-2 py-1.5"
+          >
+            <item.icon aria-hidden="true" />
+            {item.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

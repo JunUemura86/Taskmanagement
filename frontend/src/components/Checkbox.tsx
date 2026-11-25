@@ -39,7 +39,7 @@ function Checkbox({ checked, indeterminate = false, disabled = false, label, onT
       onPointerDown={stop}
       onKeyDown={stop}
       aria-label={label}
-      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary disabled:cursor-default"
+      className="checkbox mt-0.5 size-4 shrink-0 cursor-pointer disabled:cursor-default"
     />
   )
 }
