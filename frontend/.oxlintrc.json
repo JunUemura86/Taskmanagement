@@ -22,5 +22,12 @@
     "react/react-in-jsx-scope": "off",
     // 「import './index.css'」のような、見た目（CSS）の読み込みは許す
     "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
-  }
+  },
+  "overrides": [
+    {
+      // shadcn/ui から取り込んだ部品は、見た目の定義（buttonVariants など）も一緒に export する作りのため、このルールだけ切る
+      "files": ["src/components/ui/**"],
+      "rules": { "react/only-export-components": "off" }
+    }
+  ]
 }

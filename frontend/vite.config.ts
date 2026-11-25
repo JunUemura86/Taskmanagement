@@ -5,6 +5,8 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // 「@/」の別名（tsconfig.json の paths）を、Vite でも使う
+  resolve: { tsconfigPaths: true },
   server: {
     // 自分のパソコン（127.0.0.1）からだけ開けるようにする
     host: '127.0.0.1',

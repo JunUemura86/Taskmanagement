@@ -323,7 +323,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-board text-ink">
-      <Header selectedCount={selectedIdsOnBoard.length} onDeleteSelected={() => setIsConfirmingBulkDelete(true)} />
+      <Header
+        // 読み込めるまでは、数を表示しない
+        counts={
+          status === 'ready'
+            ? { lists: lists.length, cards: lists.reduce((sum, list) => sum + list.cards.length, 0) }
+            : null
+        }
+        selectedCount={selectedIdsOnBoard.length}
+        onDeleteSelected={() => setIsConfirmingBulkDelete(true)}
+      />
       {status === 'error' && <ErrorBanner message={CONNECTION_ERROR} />}
       {status === 'ready' && notice && (
         // 編集画面のうしろの暗い幕より手前に出す
