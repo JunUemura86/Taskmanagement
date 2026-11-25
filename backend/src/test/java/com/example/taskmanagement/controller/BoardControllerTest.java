@@ -88,12 +88,12 @@ class BoardControllerTest {
 
 	@Test
 	void ラベルの一覧を取得できる() throws Exception {
-		given(boardService.getLabels()).willReturn(List.of(new LabelResponse(1L, "赤", "#E5484D", 0)));
+		given(boardService.getLabels()).willReturn(List.of(new LabelResponse(1L, "赤", "#F0949B", 0)));
 
 		mockMvc.perform(get("/api/labels"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].name").value("赤"))
-				.andExpect(jsonPath("$[0].colorCode").value("#E5484D"));
+				.andExpect(jsonPath("$[0].colorCode").value("#F0949B"));
 	}
 
 	@Test
