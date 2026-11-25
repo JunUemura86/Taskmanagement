@@ -30,7 +30,7 @@ export type List = {
 export type Label = {
   id: number
   name: string
-  /** "#E5484D" の形 */
+  /** "#F0949B" の形 */
   colorCode: string
   position: number
 }

@@ -200,7 +200,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
                   aria-pressed={labelId === label.id}
                   aria-label={`ラベル：${label.name}`}
                   title={label.name}
-                  className={`h-7 w-7 rounded-full ${labelId === label.id ? SELECTED : ''}`}
+                  className={`h-7 w-7 rounded-full border border-sub/40 ${labelId === label.id ? SELECTED : ''}`}
                   style={{ backgroundColor: label.colorCode }}
                 />
               ))}
