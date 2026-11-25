@@ -32,12 +32,12 @@ function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: ConfirmDi
   }, [onCancel])
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-4">
       <div
         role="alertdialog"
         aria-modal="true"
         aria-describedby="confirm-message"
-        className="w-full max-w-xs rounded-lg bg-white p-4 shadow-xl"
+        className="w-full max-w-xs rounded-xl bg-white p-4 shadow-xl"
       >
         <p id="confirm-message" className="text-sm break-all">
           {message}
@@ -48,14 +48,14 @@ function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: ConfirmDi
             type="button"
             onClick={onCancel}
             autoFocus
-            className="rounded-md bg-[#f1f2f4] px-3 py-1.5 text-sm text-[#44546f] hover:bg-[#dcdfe4]"
+            className="rounded-md bg-soft px-3 py-1.5 text-sm text-sub hover:bg-hover"
           >
             キャンセル
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-md bg-[#c9372c] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#ae2e24]"
+            className="rounded-md bg-danger px-3 py-1.5 text-sm font-bold text-white hover:bg-danger-dark"
           >
             {confirmLabel}
           </button>

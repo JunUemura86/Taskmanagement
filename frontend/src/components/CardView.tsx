@@ -5,9 +5,9 @@ import { getPriority } from '../utils/priority'
 
 // 期限の状態ごとの見た目（機能要件「2.3 期限の色分けのルール」）
 const DUE_STYLES: Record<DueStatus, string> = {
-  overdue: 'font-bold text-[#c9372c]',
-  soon: 'rounded-sm bg-[#f8e6a0] px-1 text-[#7f5f01]',
-  normal: 'text-[#626f86]',
+  overdue: 'font-bold text-danger-dark',
+  soon: 'rounded-sm bg-warn-soft px-1 text-warn',
+  normal: 'text-sub',
 }
 
 type CardViewProps = {
@@ -30,11 +30,11 @@ function CardView({ card, label, isDoneList, leading }: CardViewProps) {
   const dueStatus: DueStatus = card.dueDate && !isDoneList ? getDueStatus(card.dueDate) : 'normal'
 
   return (
-    <div className={`relative rounded-md bg-white px-2.5 pb-2 shadow-sm ${label ? 'pt-4' : 'pt-2'}`}>
+    <div className={`relative rounded-lg border border-line bg-white px-3 pb-2.5 shadow-sm ${label ? 'pt-4' : 'pt-2.5'}`}>
       {label && (
         // ラベル（カテゴリ）：カードの上の端の細い帯。マウスを乗せると名前を表示する
         <div
-          className="absolute inset-x-0 top-0 h-1.5 rounded-t-md"
+          className="absolute -inset-x-px -top-px h-1.5 rounded-t-lg"
           style={{ backgroundColor: label.colorCode }}
           title={`ラベル：${label.name}`}
         />

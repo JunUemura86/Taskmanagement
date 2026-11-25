@@ -10,8 +10,8 @@ const EMPTY_TITLE_ERROR = 'タイトルを入力してください。'
 /** 優先度のボタンを並べる順番（高・中・低） */
 const PRIORITY_OPTIONS: Priority[] = [1, 2, 3]
 
-/** 選んでいるボタンの見た目（青い枠） */
-const SELECTED = 'ring-2 ring-[#0c66e4] ring-offset-1'
+/** 選んでいるボタンの見た目（紫の枠） */
+const SELECTED = 'ring-2 ring-primary ring-offset-1'
 
 type CardEditDialogProps = {
   card: Card
@@ -88,16 +88,16 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
 
   return (
     // うしろを暗くして、真ん中に表示する
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-10 flex items-center justify-center bg-ink/40 p-4">
       <div
         // HTML 標準の <dialog> にするかは、アクセシビリティの見直し（品質チェックの提案 C6）で決める
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
         role="dialog"
         aria-modal="true"
         aria-labelledby="card-edit-title"
-        className="w-full max-w-sm rounded-lg bg-white shadow-xl"
+        className="w-full max-w-sm rounded-xl bg-white shadow-xl"
       >
-        <div className="flex items-center justify-between border-b border-[#dcdfe4] px-4 py-3">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 id="card-edit-title" className="font-bold">
             カードの編集
           </h2>
@@ -105,7 +105,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
             type="button"
             onClick={onClose}
             aria-label="閉じる"
-            className="rounded px-2 text-xl leading-none text-[#626f86] hover:bg-[#f1f2f4]"
+            className="rounded px-2 text-xl leading-none text-sub hover:bg-soft"
           >
             ×
           </button>
@@ -114,7 +114,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
         <div className="flex flex-col gap-4 px-4 py-4 text-sm">
           {/* タイトル */}
           <div>
-            <label htmlFor="card-edit-title-input" className="mb-1 block font-bold text-[#44546f]">
+            <label htmlFor="card-edit-title-input" className="mb-1 block font-bold text-sub">
               タイトル（必須）
             </label>
             <input
@@ -129,14 +129,14 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
               maxLength={100}
               aria-invalid={error !== null}
               autoFocus
-              className="w-full rounded-md border border-[#8590a2] px-2 py-1.5 outline-none focus:border-[#0c66e4]"
+              className="w-full rounded-md border border-input-line px-2 py-1.5 outline-none focus:border-primary"
             />
-            {error && <p className="mt-1 px-1 text-xs text-[#ae2e24]">{error}</p>}
+            {error && <p className="mt-1 px-1 text-xs text-danger-dark">{error}</p>}
           </div>
 
-          {/* 優先度：選んでいるものは青い枠、ほかは薄く表示する */}
+          {/* 優先度：選んでいるものは紫の枠、ほかは薄く表示する */}
           <fieldset>
-            <legend className="mb-1 font-bold text-[#44546f]">優先度</legend>
+            <legend className="mb-1 font-bold text-sub">優先度</legend>
             <div className="flex gap-2">
               {PRIORITY_OPTIONS.map((value) => {
                 const style = getPriority(value)
@@ -147,7 +147,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
                     type="button"
                     onClick={() => setPriority(value)}
                     aria-pressed={isSelected}
-                    className={`rounded-full border px-3 py-0.5 font-bold ${style.className} ${isSelected ? SELECTED : 'opacity-40 hover:opacity-70'}`}
+                    className={`rounded-full border px-3 py-0.5 font-bold ${style.className} ${isSelected ? SELECTED : 'opacity-60 hover:opacity-80'}`}
                   >
                     {style.text}
                   </button>
@@ -158,7 +158,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
 
           {/* 期限：カレンダーから選ぶ。「クリア」でなしにできる */}
           <div>
-            <label htmlFor="card-edit-due-date" className="mb-1 block font-bold text-[#44546f]">
+            <label htmlFor="card-edit-due-date" className="mb-1 block font-bold text-sub">
               期限
             </label>
             <div className="flex gap-2">
@@ -167,13 +167,13 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
                 type="date"
                 value={dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
-                className="rounded-md border border-[#8590a2] px-2 py-1 outline-none focus:border-[#0c66e4]"
+                className="rounded-md border border-input-line px-2 py-1 outline-none focus:border-primary"
               />
               <button
                 type="button"
                 onClick={() => setDueDate('')}
                 disabled={dueDate === ''}
-                className="rounded-md bg-[#f1f2f4] px-3 text-[#44546f] hover:bg-[#dcdfe4] disabled:opacity-40"
+                className="rounded-md bg-soft px-3 text-sub hover:bg-hover disabled:opacity-40"
               >
                 クリア
               </button>
@@ -182,13 +182,13 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
 
           {/* ラベル：「なし」と5色から1つ。色にマウスを乗せると名前を表示する */}
           <fieldset>
-            <legend className="mb-1 font-bold text-[#44546f]">ラベル</legend>
+            <legend className="mb-1 font-bold text-sub">ラベル</legend>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setLabelId(null)}
                 aria-pressed={labelId === null}
-                className={`rounded-full border border-[#8590a2] px-2.5 py-0.5 text-[#44546f] ${labelId === null ? SELECTED : ''}`}
+                className={`rounded-full border border-input-line px-2.5 py-0.5 text-sub ${labelId === null ? SELECTED : ''}`}
               >
                 なし
               </button>
@@ -209,12 +209,12 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
         </div>
 
         {/* 左に「削除」、右に「保存」（押し間違えないよう離して置く） */}
-        <div className="flex justify-between border-t border-[#dcdfe4] px-4 py-3">
+        <div className="flex justify-between border-t border-line px-4 py-3">
           <button
             type="button"
             onClick={() => setIsConfirmingDelete(true)}
             disabled={isSaving}
-            className="rounded-md px-3 py-1.5 text-sm font-bold text-[#ae2e24] hover:bg-[#ffeceb] disabled:opacity-50"
+            className="rounded-md px-3 py-1.5 text-sm font-bold text-danger-dark hover:bg-danger-soft disabled:opacity-50"
           >
             削除
           </button>
@@ -222,7 +222,7 @@ function CardEditDialog({ card, labels, onSave, onDelete, onClose }: CardEditDia
             type="button"
             onClick={() => void save()}
             disabled={isSaving}
-            className="rounded-md bg-[#0c66e4] px-4 py-1.5 text-sm font-bold text-white hover:bg-[#0055cc] disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-1.5 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-50"
           >
             {isSaving ? '保存中…' : '保存'}
           </button>

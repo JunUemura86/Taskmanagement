@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+/*
+ * 画面の色。色を変えるときは、ここだけを直す（部品には色コードを直接書かない）。
+ * 使い方：--color-board は、bg-board・text-board・border-board のように書ける。
+ * 色の一覧と使う場所は、画面設計書の「7. 配色」を参照。
+ */
+@theme {
+  /* 背景と線 */
+  --color-board: #ddd6f4; /* ボードの背景 */
+  --color-list: #faf9fe; /* リストの背景 */
+  --color-list-line: #b3a6dd; /* リストの枠線 */
+  --color-line: #d9d2ef; /* カードの枠線・区切り線 */
+  --color-input-line: #8f84b8; /* 入力欄の枠線 */
+  --color-soft: #f1eefa; /* 控えめなボタンの背景 */
+  --color-hover: #e6e0f7; /* マウスを乗せたとき・押せないボタンの背景 */
+
+  /* 文字 */
+  --color-ink: #2f2a45; /* 本文 */
+  --color-sub: #5c5678; /* 補助の文字 */
+
+  /* 操作 */
+  --color-primary: #6d5bb8; /* 保存・選択中 */
+  --color-primary-dark: #5a489f; /* 保存にマウスを乗せたとき */
+
+  /* 意味のある色 */
+  --color-danger: #bf4a5a; /* 削除・優先度「高」 */
+  --color-danger-dark: #a63c4b; /* 削除にマウスを乗せたとき・赤い文字 */
+  --color-danger-soft: #fdecef; /* お知らせ欄の背景 */
+  --color-warn: #6f5500; /* 期限が近い（文字） */
+  --color-warn-soft: #fbeeb8; /* 期限が近い（背景） */
+  --color-mid: #8a4b12; /* 優先度「中」（文字） */
+  --color-mid-soft: #fdeedd; /* 優先度「中」（背景） */
+  --color-mid-line: #f0c79a; /* 優先度「中」（枠線） */
+  --color-done: #2f7a5c; /* 完了用リストの ✓ */
+}
+
+/* スクロールの端でも、ボードと同じ背景にする */
+body {
+  background-color: var(--color-board);
+  color: var(--color-ink);
+}

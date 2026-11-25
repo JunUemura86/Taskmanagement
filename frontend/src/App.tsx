@@ -322,7 +322,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e8eef5] text-[#172b4d]">
+    <div className="min-h-screen bg-board text-ink">
       <Header selectedCount={selectedIdsOnBoard.length} onDeleteSelected={() => setIsConfirmingBulkDelete(true)} />
       {status === 'error' && <ErrorBanner message={CONNECTION_ERROR} />}
       {status === 'ready' && notice && (
@@ -331,7 +331,7 @@ function App() {
           <ErrorBanner message={notice} />
         </div>
       )}
-      {status === 'loading' && <p className="p-4 text-sm text-[#626f86]">読み込み中…</p>}
+      {status === 'loading' && <p className="p-4 text-sm text-ink">読み込み中…</p>}
       {status === 'ready' && (
         <Board
           lists={lists}

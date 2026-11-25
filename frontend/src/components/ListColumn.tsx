@@ -96,7 +96,7 @@ function ListColumn({
       ref={setSectionRef}
       // ずれる動き（左右に動かす量と、動くときのなめらかさ）
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`w-68 shrink-0 rounded-lg bg-[#f1f2f4] p-2 ${isDragging ? 'opacity-40' : ''}`}
+      className={`w-72 shrink-0 rounded-xl border border-list-line bg-list p-3 shadow-md ${isDragging ? 'opacity-40' : ''}`}
     >
       <h2 className="flex items-center gap-1.5 pt-1 pb-2 font-bold">
         {/* つまみ：押したまま左右に動かすと、リストの順番を変えられる */}
@@ -106,7 +106,7 @@ function ListColumn({
           {...listeners}
           aria-label={`リスト「${list.name}」を動かす`}
           title="ドラッグしてリストを動かす"
-          className="shrink-0 cursor-grab touch-none rounded px-0.5 text-[#626f86] hover:bg-[#dcdfe4] active:cursor-grabbing"
+          className="shrink-0 cursor-grab touch-none rounded px-0.5 text-sub hover:bg-hover active:cursor-grabbing"
         >
           ⠿
         </button>
@@ -121,7 +121,7 @@ function ListColumn({
         {/* リスト名：クリックすると変更できる */}
         <ListNameEditor name={list.name} onRename={(name) => onRenameList(list.id, name)} />
         {list.isDone && (
-          <span className="shrink-0 pr-1 text-[#1f845a]" title="完了用リスト">
+          <span className="shrink-0 pr-1 text-done" title="完了用リスト">
             ✓
           </span>
         )}
@@ -136,24 +136,26 @@ function ListColumn({
           ]}
         />
       </h2>
-      {/* 並べ替えのプルダウン（UC-12）。カードが1枚以下のときは押せない */}
-      <select
-        value={sortKey ?? ''}
-        onChange={(event) => onSort(list.id, event.target.value as SortKey)}
-        disabled={list.cards.length <= 1}
-        aria-label={`リスト「${list.name}」のカードを並べ替える`}
-        className="mb-2 w-full cursor-pointer rounded-md border border-[#dcdfe4] bg-white px-2 py-1 text-sm text-[#44546f] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {/* 最初に表示するだけの項目（選べない） */}
-        <option value="" disabled hidden>
-          並べ替え…
-        </option>
-        {SORT_OPTIONS.map((option) => (
-          <option key={option.key} value={option.key}>
-            {option.text}
+      {/* 並べ替えのプルダウン（UC-12）。カードが1枚以下のときは押せない。下の線で、見出しとカードの並びを分ける */}
+      <div className="-mx-3 mb-3 border-b border-line px-3 pb-3">
+        <select
+          value={sortKey ?? ''}
+          onChange={(event) => onSort(list.id, event.target.value as SortKey)}
+          disabled={list.cards.length <= 1}
+          aria-label={`リスト「${list.name}」のカードを並べ替える`}
+          className="w-full cursor-pointer rounded-md border border-input-line bg-white px-2 py-1 text-sm text-sub disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {/* 最初に表示するだけの項目（選べない） */}
+          <option value="" disabled hidden>
+            並べ替え…
           </option>
-        ))}
-      </select>
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.text}
+            </option>
+          ))}
+        </select>
+      </div>
       {/* 縦に並んだカードとして、並べ替えられるようにする */}
       <SortableContext items={list.cards.map((card) => cardDndId(card.id))} strategy={verticalListSortingStrategy}>
         <ul className="flex min-h-1 flex-col gap-2">
