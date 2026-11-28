@@ -1,7 +1,8 @@
 # ⑤ EC2 用のポート（セキュリティグループ）
 # セキュリティグループは EC2 の前に立つ門番。許可した通信だけを通す。
-# このアプリにはログインがないので、自宅の IP からのポート 80（http）だけを通す。
-# SSH（22）は開けない。EC2 に入るときは Session Manager を使う。
+# 通すのは、自宅の IP からの次の2つだけ。
+# - 80（http）：アプリの画面と API。このアプリにはログインがないので、自宅の IP に限る
+# - 22（SSH）：EC2 に入って作業するため。SSH キー（秘密鍵）を持っている人だけが入れる
 #
 # 8080 と 5173 を開けない理由：
 #   ブラウザ ──80──▶ nginx ─┬─ 画面（ビルド済みのファイル）をそのまま返す
@@ -14,7 +15,7 @@
 
 resource "aws_security_group" "web" {
   name        = "${var.project_name}-web-sg"
-  description = "Allow HTTP from my IP only"
+  description = "Allow HTTP and SSH from my IP only"
   vpc_id      = aws_vpc.main.id
 
   tags = {
@@ -32,7 +33,17 @@ resource "aws_vpc_security_group_ingress_rule" "http_from_my_ip" {
   cidr_ipv4         = var.my_ip_cidr
 }
 
-# 出ていく通信：すべて許可（GitHub からの clone、コンテナイメージの取得、Session Manager に必要）
+# 入ってくる通信：自宅の IP からのポート 22（SSH）だけ
+resource "aws_vpc_security_group_ingress_rule" "ssh_from_my_ip" {
+  security_group_id = aws_security_group.web.id
+  description       = "SSH from my IP"
+  ip_protocol       = "tcp"
+  from_port         = 22
+  to_port           = 22
+  cidr_ipv4         = var.my_ip_cidr
+}
+
+# 出ていく通信：すべて許可（GitHub からの clone、Docker・コンテナイメージの取得に必要）
 resource "aws_vpc_security_group_egress_rule" "all_outbound" {
   security_group_id = aws_security_group.web.id
   description       = "All outbound"

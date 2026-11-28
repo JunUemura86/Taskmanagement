@@ -9,32 +9,12 @@ data "aws_ssm_parameter" "al2023_arm64" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
 
-# --- Session Manager で EC2 に入るための IAM ロール ---
-
-data "aws_iam_policy_document" "ec2_assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "ec2" {
-  name               = "${var.project_name}-ec2-role"
-  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "ssm_core" {
-  role       = aws_iam_role.ec2.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-resource "aws_iam_instance_profile" "ec2" {
-  name = "${var.project_name}-ec2-profile"
-  role = aws_iam_role.ec2.name
+# --- SSH キー ---
+# 鍵のペアは Mac で ssh-keygen を使って作る（秘密鍵は Mac の ~/.ssh にだけ置く）。
+# AWS に渡すのは公開鍵（.pub）だけ。Terraform で鍵を作ると秘密鍵が state に残るので、そうしない。
+resource "aws_key_pair" "app" {
+  key_name   = "${var.project_name}-key"
+  public_key = file(pathexpand(var.ssh_public_key_path))
 }
 
 # --- EC2 本体 ---
@@ -44,7 +24,7 @@ resource "aws_instance" "app" {
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public["a"].id
   vpc_security_group_ids = [aws_security_group.web.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2.name
+  key_name               = aws_key_pair.app.key_name
 
   # ディスク：20GB・gp3・暗号化あり
   root_block_device {

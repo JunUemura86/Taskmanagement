@@ -17,7 +17,7 @@ output "instance_id" {
   value       = aws_instance.app.id
 }
 
-output "ssm_session_command" {
-  description = "Session Manager で EC2 に入るコマンド（Session Manager プラグインが必要）"
-  value       = "aws ssm start-session --target ${aws_instance.app.id} --profile ${var.aws_profile} --region ${var.region}"
+output "ssh_command" {
+  description = "SSH で EC2 に入るコマンド（Amazon Linux のユーザー名は ec2-user）"
+  value       = "ssh -i ${var.ssh_private_key_path} ec2-user@${aws_instance.app.public_ip}"
 }

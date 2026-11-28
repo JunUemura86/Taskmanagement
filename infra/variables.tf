@@ -66,6 +66,18 @@ variable "public_subnets" {
   }
 }
 
+variable "ssh_public_key_path" {
+  description = "EC2 に登録する SSH の公開鍵（.pub）の場所。秘密鍵（.pub なし）は Mac にだけ置く"
+  type        = string
+  default     = "~/.ssh/taskmanagement_ed25519.pub"
+}
+
+variable "ssh_private_key_path" {
+  description = "SSH の秘密鍵の場所（接続コマンドの表示に使うだけ。Terraform は中身を読まない）"
+  type        = string
+  default     = "~/.ssh/taskmanagement_ed25519"
+}
+
 variable "root_volume_size" {
   description = "EC2 のディスクの大きさ（GB）"
   type        = number
