@@ -12,11 +12,10 @@ terraform {
     }
   }
 
-  # state（Terraform が「何を作ったか」を覚えておく記録）は S3 に置く。
-  # バケット名にはアカウント番号が入るので、ここには書かず、
-  # 公開しないファイル backend.hcl から読み込む（見本は backend.hcl.example）。
-  #   terraform init -backend-config=backend.hcl
-  backend "s3" {}
+  # state（Terraform が「何を作ったか」を覚えておく記録）は、手元の infra/terraform.tfstate に置く。
+  # backend を書かなければ、手元に置かれる。.gitignore に入っているので GitHub には上がらない。
+  # 注意：AWS に何かがある間は terraform.tfstate を消さない（消すと Terraform で destroy できなくなる）。
+  # あとで S3 に移すときは、ここに backend "s3" { ... } を書いて terraform init -migrate-state を実行する。
 }
 
 provider "aws" {

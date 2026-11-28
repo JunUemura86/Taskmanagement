@@ -12,7 +12,5 @@
 # 変数の値（アカウント番号・自宅の IP など）。見本の .example だけは Git に入れる
 *.tfvars
 !*.tfvars.example
-# S3 の設定（バケット名にアカウント番号が入る）
-backend.hcl
 # Terraform が異常終了したときの記録
 crash.log
