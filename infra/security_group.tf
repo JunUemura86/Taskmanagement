@@ -2,6 +2,15 @@
 # セキュリティグループは EC2 の前に立つ門番。許可した通信だけを通す。
 # このアプリにはログインがないので、自宅の IP からのポート 80（http）だけを通す。
 # SSH（22）は開けない。EC2 に入るときは Session Manager を使う。
+#
+# 8080 と 5173 を開けない理由：
+#   ブラウザ ──80──▶ nginx ─┬─ 画面（ビルド済みのファイル）をそのまま返す
+#                            └─ /api/* だけ Spring Boot（8080）へ中継する
+# - 5173（Vite）は手元で開発するときだけ使う。EC2 では npm run build で作ったファイルを
+#   nginx がポート 80 で返すので、5173 は使わない。
+# - 8080（Spring Boot）は、nginx から EC2 の中の Docker ネットワークを通って呼ばれるだけ。
+#   開けると nginx を通らずに API を直接呼べる入口が増えるので、開けない。
+# - 5432（PostgreSQL）も同じく EC2 の中だけで使うので、開けない。
 
 resource "aws_security_group" "web" {
   name        = "${var.project_name}-web-sg"
