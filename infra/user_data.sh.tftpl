@@ -24,7 +24,9 @@ PLUGIN_DIR=/usr/local/lib/docker/cli-plugins
 mkdir -p $PLUGIN_DIR
 curl -fsSL -o $PLUGIN_DIR/docker-compose \
   https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64
-BUILDX_VERSION=$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest | grep -m1 '"tag_name"' | cut -d '"' -f 4)
+# 最新版の番号（例：v0.39.1）を調べる。grep -m1 や head だと途中で読むのをやめ、
+# curl が「書き込み失敗」で止まるので、awk で最後まで読んでから最初の1つを取り出す
+BUILDX_VERSION=$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest | awk -F '"' '/"tag_name"/ && !found { print $4; found = 1 }')
 curl -fsSL -o $PLUGIN_DIR/docker-buildx \
   https://github.com/docker/buildx/releases/download/$BUILDX_VERSION/buildx-$BUILDX_VERSION.linux-arm64
 chmod +x $PLUGIN_DIR/docker-compose $PLUGIN_DIR/docker-buildx
