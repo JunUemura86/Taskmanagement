@@ -1,0 +1,13 @@
+# ③ 変数値の見本
+# このファイルを terraform.tfvars という名前でコピーし、本当の値に書き換える。
+#   cp terraform.tfvars.example terraform.tfvars
+# terraform.tfvars は .gitignore に入っているので、GitHub には上がらない。
+
+# Terraform を実行してよい AWS アカウントの番号（aws sts get-caller-identity の Account）
+allowed_account_id = "123456789012"
+
+# 自宅の IP アドレス（curl https://checkip.amazonaws.com で調べ、末尾に /32 を付ける）
+my_ip_cidr = "203.0.113.10/32"
+
+# 必要なら初期値を変える（書かなければ variables.tf の初期値が使われる）
+# instance_type = "t4g.micro"
