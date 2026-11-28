@@ -2,3 +2,17 @@
 
 # Mac の Finder が自動で作るファイル（フォルダの見た目の記録）
 .DS_Store
+
+# Terraform（infra フォルダ）
+# プロバイダーのプラグイン置き場（terraform init で毎回作られる）
+.terraform/
+# state（作ったものの記録。秘密の値が入ることがある）
+*.tfstate
+*.tfstate.*
+# 変数の値（アカウント番号・自宅の IP など）。見本の .example だけは Git に入れる
+*.tfvars
+!*.tfvars.example
+# S3 の設定（バケット名にアカウント番号が入る）
+backend.hcl
+# Terraform が異常終了したときの記録
+crash.log

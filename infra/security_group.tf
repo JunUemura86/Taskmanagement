@@ -1,0 +1,32 @@
+# ⑤ EC2 用のポート（セキュリティグループ）
+# セキュリティグループは EC2 の前に立つ門番。許可した通信だけを通す。
+# このアプリにはログインがないので、自宅の IP からのポート 80（http）だけを通す。
+# SSH（22）は開けない。EC2 に入るときは Session Manager を使う。
+
+resource "aws_security_group" "web" {
+  name        = "${var.project_name}-web-sg"
+  description = "Allow HTTP from my IP only"
+  vpc_id      = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.project_name}-web-sg"
+  }
+}
+
+# 入ってくる通信：自宅の IP からのポート 80 だけ
+resource "aws_vpc_security_group_ingress_rule" "http_from_my_ip" {
+  security_group_id = aws_security_group.web.id
+  description       = "HTTP from my IP"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+  cidr_ipv4         = var.my_ip_cidr
+}
+
+# 出ていく通信：すべて許可（GitHub からの clone、コンテナイメージの取得、Session Manager に必要）
+resource "aws_vpc_security_group_egress_rule" "all_outbound" {
+  security_group_id = aws_security_group.web.id
+  description       = "All outbound"
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+}
